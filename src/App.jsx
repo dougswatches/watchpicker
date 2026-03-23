@@ -284,30 +284,26 @@ export default function WatchQuiz() {
     }
   };
 
-  const submitQuiz = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          messages: [{ role: "user", content: buildPrompt(answers) }],
-        }),
-      });
-      const data = await response.json();
-      const text = data.content.map(b => b.text || "").join("");
-      const clean = text.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(clean);
-      setResults(parsed);
-    } catch (e) {
-      setError("Something went wrong fetching recommendations. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const submitQuiz = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: buildPrompt(answers) }),
+    });
+    const data = await response.json();
+    const text = data.content.map(b => b.text || '').join('');
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+    setResults(parsed);
+  } catch (e) {
+    setError('Something went wrong fetching recommendations. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const reset = () => {
     setStep(0);
