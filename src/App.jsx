@@ -111,7 +111,7 @@ Recommend exactly 3 watches that perfectly match this profile. For each watch pr
 1. A specific model name (brand + model + reference if relevant)
 2. A typical market price (be accurate)
 3. A Chrono24 search URL using this format: https://www.chrono24.com/search/index.htm?query=WATCH+NAME+URL+ENCODED
-4. A compelling 2–3 sentence reason why this watch is perfect for this customer, referencing their specific answers
+4. A compelling 2-3 sentence reason why this watch is perfect for this customer, referencing their specific answers
 5. 3 key specs (e.g. case size, movement, water resistance)
 
 Respond ONLY with a JSON array of 3 objects with these exact keys:
@@ -121,11 +121,11 @@ Respond ONLY with a JSON array of 3 objects with these exact keys:
 - "reason": string
 - "specs": array of 3 strings
 
-Return raw JSON only. No markdown, no explanation outside the array.`;
+Return raw JSON only. No markdown, no code blocks, no explanation. Just the raw JSON array starting with [ and ending with ].`;
 }
 
 const WatchIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
     <rect x="9" y="1" width="10" height="4" rx="1" fill="currentColor" opacity="0.3"/>
     <rect x="9" y="23" width="10" height="4" rx="1" fill="currentColor" opacity="0.3"/>
     <circle cx="14" cy="14" r="9" stroke="currentColor" strokeWidth="1.5" fill="none"/>
@@ -240,7 +240,6 @@ function WatchCard({ watch, index }) {
             color:"#c4892a",textDecoration:"none",
             border:"0.5px solid rgba(196,137,42,0.35)",
             borderRadius:8,padding:"0.5rem 0.9rem",
-            transition:"background 0.15s",
             background:"rgba(196,137,42,0.06)"
           }}
         >
@@ -294,19 +293,17 @@ export default function WatchQuiz() {
         body: JSON.stringify({ prompt: buildPrompt(answers) }),
       });
       const data = await response.json();
-const text = data.text || '';
-const clean = text
-  .replace(/```json/g, '')
-  .replace(/```/g, '')
-  .trim();
-console.log('RAW RESPONSE:', text);
-console.log('CLEANED:', clean);
-const jsonMatch = clean.match(/\[[\s\S]*\]/);
-const jsonMatch = clean.match(/\[[\s\S]*\]/);
-if (!jsonMatch) throw new Error('No JSON array found');
-const parsed = JSON.parse(jsonMatch[0]);
+      const text = data.text || '';
+      const clean = text
+        .replace(/```json/gi, '')
+        .replace(/```/g, '')
+        .trim();
+      const jsonMatch = clean.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error('No JSON array found in response');
+      const parsed = JSON.parse(jsonMatch[0]);
       setResults(parsed);
     } catch (e) {
+      console.error('Quiz error:', e);
       setError('Something went wrong fetching recommendations. Please try again.');
     } finally {
       setLoading(false);
@@ -345,10 +342,7 @@ const parsed = JSON.parse(jsonMatch[0]);
           text-align: left; transition: border-color 0.15s, background 0.15s;
         }
         .opt-btn:hover { border-color: ${gold}; }
-        .opt-btn.selected {
-          border-color: ${gold};
-          background: ${goldLight};
-        }
+        .opt-btn.selected { border-color: ${gold}; background: ${goldLight}; }
         .nav-btn {
           display: inline-flex; align-items: center; gap: 0.5rem;
           padding: 0.65rem 1.25rem;
@@ -359,7 +353,6 @@ const parsed = JSON.parse(jsonMatch[0]);
         .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
       `}</style>
 
-      {/* Header */}
       <header style={{
         borderBottom:"0.5px solid var(--color-border-tertiary)",
         background:"var(--color-background-primary)",
@@ -379,7 +372,6 @@ const parsed = JSON.parse(jsonMatch[0]);
 
       <main style={{maxWidth:560,margin:"0 auto",padding:"2rem 1rem 4rem"}}>
 
-        {/* Results */}
         {results && !loading && (
           <div>
             <div style={{textAlign:"center",marginBottom:"2rem"}}>
@@ -405,10 +397,8 @@ const parsed = JSON.parse(jsonMatch[0]);
           </div>
         )}
 
-        {/* Loading */}
         {loading && <Loader/>}
 
-        {/* Error */}
         {error && !loading && (
           <div style={{textAlign:"center",padding:"3rem 1rem"}}>
             <p style={{color:"var(--color-text-danger)",marginBottom:"1rem"}}>{error}</p>
@@ -418,10 +408,8 @@ const parsed = JSON.parse(jsonMatch[0]);
           </div>
         )}
 
-        {/* Quiz */}
         {!results && !loading && !error && (
           <div>
-            {/* Progress */}
             <div style={{marginBottom:"2.5rem"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.6rem"}}>
                 <span style={{fontSize:"0.75rem",color:"var(--color-text-secondary)",letterSpacing:"0.06em"}}>
@@ -440,7 +428,6 @@ const parsed = JSON.parse(jsonMatch[0]);
               </div>
             </div>
 
-            {/* Question */}
             <div style={{marginBottom:"2rem"}}>
               <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.9rem",fontWeight:600,color:"var(--color-text-primary)",lineHeight:1.2,marginBottom:"0.4rem"}}>
                 {q.label}
@@ -452,7 +439,6 @@ const parsed = JSON.parse(jsonMatch[0]);
               )}
             </div>
 
-            {/* Options */}
             {q.type === "single" && (
               <div style={{display:"flex",flexDirection:"column",gap:"0.5rem",marginBottom:"2rem"}}>
                 {q.options.map(opt => {
@@ -526,7 +512,6 @@ const parsed = JSON.parse(jsonMatch[0]);
               </div>
             )}
 
-            {/* Navigation */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
               <button
                 className="nav-btn"
