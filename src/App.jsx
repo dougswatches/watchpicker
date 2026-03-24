@@ -1,11 +1,11 @@
 import { useState } from "react";
-
+ 
+// ─── Quiz Data ────────────────────────────────────────────────────────────────
+ 
 const questions = [
   {
-    id: "budget",
-    label: "What's your budget?",
-    subtitle: "We'll find the best value in your range.",
-    type: "single",
+    id: "budget", label: "What's your budget?",
+    subtitle: "We'll find the best value in your range.", type: "single",
     options: [
       { value: "under_500", label: "Under $500" },
       { value: "500_2000", label: "$500 – $2,000" },
@@ -15,10 +15,8 @@ const questions = [
     ],
   },
   {
-    id: "use_case",
-    label: "How will you wear it?",
-    subtitle: "Pick everything that applies.",
-    type: "multi",
+    id: "use_case", label: "How will you wear it?",
+    subtitle: "Pick everything that applies.", type: "multi",
     options: [
       { value: "daily_driver", label: "Everyday wear" },
       { value: "office", label: "Business / office" },
@@ -29,10 +27,8 @@ const questions = [
     ],
   },
   {
-    id: "style",
-    label: "What's your aesthetic?",
-    subtitle: "Pick the vibe that resonates most.",
-    type: "single",
+    id: "style", label: "What's your aesthetic?",
+    subtitle: "Pick the vibe that resonates most.", type: "single",
     options: [
       { value: "classic", label: "Classic & timeless" },
       { value: "modern", label: "Clean & modern" },
@@ -43,10 +39,8 @@ const questions = [
     ],
   },
   {
-    id: "brand_pref",
-    label: "Any brand preferences?",
-    subtitle: "Select all you're drawn to, or skip.",
-    type: "multi",
+    id: "brand_pref", label: "Any brand preferences?",
+    subtitle: "Select all you're drawn to, or skip.", type: "multi",
     options: [
       { value: "rolex", label: "Rolex" },
       { value: "omega", label: "Omega" },
@@ -59,10 +53,8 @@ const questions = [
     ],
   },
   {
-    id: "dress_vs_sport",
-    label: "Dress or sport?",
-    subtitle: "Where does your heart lie?",
-    type: "single",
+    id: "dress_vs_sport", label: "Dress or sport?",
+    subtitle: "Where does your heart lie?", type: "single",
     options: [
       { value: "dress", label: "Dress — elegant and refined" },
       { value: "sport", label: "Sport — rugged and capable" },
@@ -73,22 +65,18 @@ const questions = [
     ],
   },
   {
-    id: "existing_watches",
-    label: "What do you already own?",
+    id: "existing_watches", label: "What do you already own?",
     subtitle: "We'll make sure this recommendation complements your collection.",
-    type: "text",
-    placeholder: "e.g. Seiko SKX, nothing yet, a Casio G-Shock…",
+    type: "text", placeholder: "e.g. Seiko SKX, nothing yet, a Casio G-Shock…",
   },
 ];
-
+ 
 const budgetLabels = {
-  under_500: "under $500",
-  "500_2000": "$500–$2,000",
-  "2000_5000": "$2,000–$5,000",
-  "5000_15000": "$5,000–$15,000",
+  under_500: "under $500", "500_2000": "$500–$2,000",
+  "2000_5000": "$2,000–$5,000", "5000_15000": "$5,000–$15,000",
   above_15000: "above $15,000",
 };
-
+ 
 function buildPrompt(answers) {
   const budget = budgetLabels[answers.budget] || answers.budget;
   const useCase = (answers.use_case || []).join(", ") || "general use";
@@ -96,7 +84,6 @@ function buildPrompt(answers) {
   const brands = (answers.brand_pref || []).join(", ") || "no preference";
   const type = answers.dress_vs_sport || "any";
   const existing = answers.existing_watches || "nothing specified";
-
   return `You are a world-class watch expert. Recommend exactly 3 watches for this customer:
 - Budget: ${budget}
 - Use case: ${useCase}
@@ -104,9 +91,7 @@ function buildPrompt(answers) {
 - Brand preferences: ${brands}
 - Watch type: ${type}
 - Already owns: ${existing}
-
-For each watch, also select ONLY the platforms where this specific watch is genuinely sold or commonly listed. Be accurate — do not include platforms that would not realistically stock this watch.
-
+ 
 Available platform keys and what they stock:
 - "chrono24" — pre-owned and grey market, all brands
 - "watchfinder" — pre-owned luxury (Rolex, Omega, TAG, Breitling, IWC etc)
@@ -122,36 +107,45 @@ Available platform keys and what they stock:
 - "cwsellors" — new, mid range UK (Seiko, Citizen, Tissot, Hamilton, Rotary)
 - "fhinds" — new, budget to mid range UK (Seiko, Citizen, Casio, Rotary, Lorus)
 - "citizen" — new Citizen brand watches only
-
-Return ONLY a raw JSON array of 3 objects with these exact keys:
-- "name": string — specific model e.g. "Seiko Prospex SPB143"
-- "price": string — e.g. "~£320 new / ~£250 pre-owned"
-- "availability": string — one of: "new", "preowned", "both"
-- "reason": string — 2-3 sentences tailored to this customer
-- "specs": array of exactly 3 strings
-- "platforms": array of platform key strings from the list above — only include platforms that genuinely stock this watch
-
-No markdown, no code blocks. Start with [ and end with ].`;
+ 
+Return ONLY a raw JSON array of 3 objects:
+- "name": string
+- "price": string
+- "availability": "new" | "preowned" | "both"
+- "reason": string (2-3 sentences)
+- "specs": array of 3 strings
+- "platforms": array of platform keys that genuinely stock this watch
+ 
+No markdown, no code blocks. Start with [ end with ].`;
 }
-
+ 
+// ─── Nav Config ───────────────────────────────────────────────────────────────
+ 
+const NAV_ITEMS = [
+  { id: "finder",         label: "Watch Finder",        icon: "◎", badge: "FREE",    live: true  },
+  { id: "valuation",      label: "Valuation Tool",      icon: "◈", badge: "COMING",  live: false },
+  { id: "shouldibuy",     label: "Should I Buy This?",  icon: "◇", badge: "COMING",  live: false },
+  { id: "authentication", label: "Authentication",       icon: "◉", badge: "COMING",  live: false },
+  { id: "collection",     label: "My Collection",        icon: "▣", badge: "PRO",     live: false },
+];
+ 
+// ─── Icons ────────────────────────────────────────────────────────────────────
+ 
 const ArrowRight = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
-
 const ArrowLeft = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
     <path d="M13 8H3M7 12L3 8l4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
-
 const CheckIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+  <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
     <polyline points="2.5,7 5.5,10 11.5,4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
-
 const ExternalIcon = () => (
   <svg width="10" height="10" viewBox="0 0 13 13" fill="none">
     <path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
@@ -159,47 +153,138 @@ const ExternalIcon = () => (
     <line x1="12" y1="1" x2="6" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
   </svg>
 );
-
-const Loader = () => (
-  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"3rem 2rem"}}>
-    <div style={{
-      width:40,height:40,borderRadius:"50%",
-      border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",
-      animation:"spin 0.8s linear infinite"
-    }}/>
-    <div style={{textAlign:"center"}}>
-      <p style={{fontSize:"1rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Finding your watches</p>
-      <p style={{fontSize:"0.85rem",color:"#888",margin:0}}>Searching across all our partners…</p>
-    </div>
-    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-  </div>
+const MenuIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+    <line x1="3" y1="6" x2="17" y2="6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="3" y1="10" x2="17" y2="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="3" y1="14" x2="17" y2="14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
 );
-
+const CloseIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+    <line x1="3" y1="3" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="15" y1="3" x2="3" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+ 
+// ─── Coming Soon Page ─────────────────────────────────────────────────────────
+ 
+const COMING_SOON_CONTENT = {
+  valuation: {
+    title: "Watch Valuation Tool",
+    description: "Upload a photo or describe your watch and get an instant market valuation with buy/sell guidance, condition grading, and suggested listing platforms.",
+    features: ["AI-powered market pricing", "Low / mid / high value range", "Condition grading guide", "PDF insurance report — £4.99"],
+  },
+  shouldibuy: {
+    title: "Should I Buy This?",
+    description: "Paste a listing URL or describe a watch you're considering. Get an instant red flag analysis, price fairness check, and confidence verdict before you spend.",
+    features: ["Price fairness check", "Red flag detection", "Reference verification", "Alternative recommendations"],
+  },
+  authentication: {
+    title: "Authentication Assistant",
+    description: "Upload photos of a watch you're considering buying. Our AI checks for common counterfeit tells specific to that reference and returns a confidence verdict.",
+    features: ["Multi-image analysis", "Model-specific counterfeit checks", "Confidence verdict", "Pay per check — £2.99"],
+  },
+  collection: {
+    title: "My Collection",
+    description: "Log your watches and let our AI manage your portfolio. Track values over time, get insurance valuations, and receive personalised sell alerts.",
+    features: ["Portfolio value tracking", "Insurance PDF export", "Sell timing alerts", "Next watch recommendations"],
+    pro: true,
+  },
+};
+ 
+function ComingSoon({ toolId }) {
+  const content = COMING_SOON_CONTENT[toolId];
+  if (!content) return null;
+  return (
+    <div style={{maxWidth:560,margin:"0 auto",padding:"3rem 1.5rem"}}>
+      <div style={{marginBottom:"2.5rem"}}>
+        <span style={{
+          fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.14em",
+          padding:"0.25rem 0.6rem",borderRadius:2,
+          background: content.pro ? "#1a1a1a" : "#f0f0f0",
+          color: content.pro ? "#fff" : "#888",
+          marginBottom:"1rem",display:"inline-block",
+        }}>
+          {content.pro ? "PRO FEATURE" : "COMING SOON"}
+        </span>
+        <h1 style={{fontSize:"1.75rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,margin:"0.75rem 0 1rem"}}>
+          {content.title}
+        </h1>
+        <p style={{fontSize:"0.95rem",lineHeight:1.7,color:"#555",maxWidth:480}}>
+          {content.description}
+        </p>
+      </div>
+ 
+      <div style={{
+        background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"1.5rem",marginBottom:"2rem"
+      }}>
+        <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"1rem"}}>
+          WHAT'S INCLUDED
+        </p>
+        <div style={{display:"flex",flexDirection:"column",gap:"0.6rem"}}>
+          {content.features.map((f, i) => (
+            <div key={i} style={{display:"flex",alignItems:"center",gap:"0.75rem"}}>
+              <div style={{
+                width:18,height:18,borderRadius:"50%",flexShrink:0,
+                background:"#1a1a1a",
+                display:"flex",alignItems:"center",justifyContent:"center",color:"#fff"
+              }}>
+                <CheckIcon/>
+              </div>
+              <span style={{fontSize:"0.875rem",color:"#333",fontWeight:500}}>{f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+ 
+      <div style={{
+        background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"1.25rem 1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"1rem"
+      }}>
+        <div>
+          <p style={{fontSize:"0.875rem",fontWeight:600,color:"#1a1a1a",margin:0}}>Get notified when this launches</p>
+          <p style={{fontSize:"0.8rem",color:"#888",margin:"0.2rem 0 0"}}>Be first to know — no spam.</p>
+        </div>
+        <a href="https://dougswatches.co.uk" target="_blank" rel="noopener noreferrer"
+          style={{
+            display:"inline-flex",alignItems:"center",gap:"0.4rem",
+            fontSize:"0.78rem",fontWeight:700,letterSpacing:"0.05em",
+            padding:"0.6rem 1rem",borderRadius:3,
+            background:"#1a1a1a",color:"#fff",textDecoration:"none",whiteSpace:"nowrap",
+          }}>
+          NOTIFY ME <ArrowRight/>
+        </a>
+      </div>
+    </div>
+  );
+}
+ 
+// ─── Watch Card ───────────────────────────────────────────────────────────────
+ 
 function WatchCard({ watch, index }) {
   const [showAll, setShowAll] = useState(false);
   const links = watch.buy_links || [];
   const visibleLinks = showAll ? links : links.slice(0, 3);
-
+ 
   return (
     <div style={{
       background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
       overflow:"hidden",animation:`fadeUp 0.4s ease both`,
       animationDelay:`${index * 0.1}s`,
     }}>
-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}`}</style>
       <div style={{background:"#1a1a1a",padding:"1rem 1.25rem",display:"flex",alignItems:"center",gap:"0.75rem"}}>
-        <span style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#666",minWidth:20}}>
+        <span style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#555",minWidth:20}}>
           0{index + 1}
         </span>
         <div style={{flex:1,minWidth:0}}>
-          <p style={{fontSize:"1rem",fontWeight:700,color:"#fff",margin:0,lineHeight:1.3}}>
-            {watch.name}
-          </p>
+          <p style={{fontSize:"1rem",fontWeight:700,color:"#fff",margin:0,lineHeight:1.3}}>{watch.name}</p>
           <p style={{fontSize:"0.8rem",color:"#999",margin:"0.2rem 0 0"}}>{watch.price}</p>
         </div>
         {watch.availability && (
           <span style={{
-            fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",
+            fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",
             padding:"0.2rem 0.5rem",borderRadius:2,flexShrink:0,
             background: watch.availability === 'new' ? "#2d6a4f" : watch.availability === 'preowned' ? "#1d3557" : "#444",
             color:"#fff",whiteSpace:"nowrap",
@@ -208,11 +293,8 @@ function WatchCard({ watch, index }) {
           </span>
         )}
       </div>
-
       <div style={{padding:"1.25rem"}}>
-        <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:"0 0 1rem"}}>
-          {watch.reason}
-        </p>
+        <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:"0 0 1rem"}}>{watch.reason}</p>
         <div style={{display:"flex",flexWrap:"wrap",gap:"0.35rem",marginBottom:"1.25rem"}}>
           {(watch.specs || []).map((spec,i) => (
             <span key={i} style={{
@@ -221,10 +303,9 @@ function WatchCard({ watch, index }) {
             }}>{spec}</span>
           ))}
         </div>
-
         {links.length > 0 && (
           <div style={{borderTop:"1px solid #f0f0f0",paddingTop:"1rem"}}>
-            <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>
+            <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#aaa",marginBottom:"0.6rem"}}>
               WHERE TO BUY
             </p>
             <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
@@ -234,9 +315,8 @@ function WatchCard({ watch, index }) {
                     display:"inline-flex",alignItems:"center",gap:"0.3rem",
                     fontSize:"0.75rem",fontWeight:600,color:"#1a1a1a",
                     textDecoration:"none",letterSpacing:"0.03em",
-                    padding:"0.35rem 0.65rem",
-                    border:"1px solid #e0e0e0",borderRadius:3,
-                    background:"#fafafa",transition:"border-color 0.12s,background 0.12s",
+                    padding:"0.35rem 0.65rem",border:"1px solid #e0e0e0",
+                    borderRadius:3,background:"#fafafa",transition:"all 0.12s",
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
@@ -249,7 +329,7 @@ function WatchCard({ watch, index }) {
                   fontSize:"0.75rem",fontWeight:600,color:"#888",
                   padding:"0.35rem 0.65rem",border:"1px solid #e0e0e0",
                   borderRadius:3,background:"#fafafa",cursor:"pointer",
-                  fontFamily:"'Albert Sans',system-ui,sans-serif",letterSpacing:"0.03em",
+                  fontFamily:"'Albert Sans',system-ui,sans-serif",
                 }}>
                   +{links.length - 3} more
                 </button>
@@ -261,32 +341,41 @@ function WatchCard({ watch, index }) {
     </div>
   );
 }
-
-export default function WatchQuiz() {
+ 
+// ─── Loader ───────────────────────────────────────────────────────────────────
+ 
+const Loader = () => (
+  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
+    <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
+    <div style={{textAlign:"center"}}>
+      <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Finding your watches</p>
+      <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Searching across all our partners…</p>
+    </div>
+    <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}`}</style>
+  </div>
+);
+ 
+// ─── Watch Finder Tool ────────────────────────────────────────────────────────
+ 
+function WatchFinder() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
-
+ 
   const q = questions[step];
   const isLast = step === questions.length - 1;
-
   const canAdvance = () => {
     if (q.type === "single") return !!answers[q.id];
     if (q.type === "multi") return (answers[q.id] || []).length > 0;
-    if (q.type === "text") return true;
-    return false;
+    return true;
   };
-
-  const handleNext = () => {
-    if (isLast) submitQuiz();
-    else setStep(s => s + 1);
-  };
-
+ 
+  const handleNext = () => { if (isLast) submitQuiz(); else setStep(s => s + 1); };
+ 
   const submitQuiz = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const response = await fetch('/api/recommend', {
         method: 'POST',
@@ -294,32 +383,144 @@ export default function WatchQuiz() {
         body: JSON.stringify({ prompt: buildPrompt(answers) }),
       });
       const data = await response.json();
-      if (data.watches) {
-        setResults(data.watches);
-      } else {
-        throw new Error('No watches in response');
-      }
+      if (data.watches) setResults(data.watches);
+      else throw new Error('No watches');
     } catch (e) {
-      console.error('Quiz error:', e.message);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
-
-  const reset = () => {
-    setStep(0);
-    setAnswers({});
-    setResults(null);
-    setError(null);
-    setLoading(false);
-  };
-
+ 
+  const reset = () => { setStep(0); setAnswers({}); setResults(null); setError(null); setLoading(false); };
+ 
+  if (loading) return <Loader/>;
+ 
+  if (error) return (
+    <div style={{textAlign:"center",padding:"3rem 1rem"}}>
+      <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
+      <button onClick={submitQuiz} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",background:"#1a1a1a",color:"#fff",border:"none",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}>TRY AGAIN</button>
+    </div>
+  );
+ 
+  if (results) return (
+    <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
+      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>YOUR RESULTS</p>
+        <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>Three watches picked for you</h2>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
+        {results.map((watch, i) => <WatchCard key={i} watch={watch} index={i}/>)}
+      </div>
+      <button onClick={reset} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",background:"#f0f0f0",color:"#555",
+        border:"1px solid #ddd",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}><ArrowLeft/> START OVER</button>
+    </div>
+  );
+ 
   return (
-    <div style={{background:"#f9f9f9",fontFamily:"'Albert Sans',system-ui,sans-serif"}}>
+    <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
+      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>
+          QUESTION {step + 1} OF {questions.length}
+        </p>
+        <div style={{height:2,background:"#e8e8e8",marginBottom:"1.25rem"}}>
+          <div style={{height:"100%",background:"#1a1a1a",width:`${(step/questions.length)*100}%`,transition:"width 0.3s ease"}}/>
+        </div>
+        <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>{q.label}</h2>
+        {q.subtitle && <p style={{fontSize:"0.85rem",color:"#888"}}>{q.subtitle}</p>}
+      </div>
+ 
+      {q.type === "single" && (
+        <div style={{display:"flex",flexDirection:"column",gap:"0.5rem",marginBottom:"2rem"}}>
+          {q.options.map(opt => {
+            const sel = answers[q.id] === opt.value;
+            return (
+              <button key={opt.value}
+                className={`opt-btn${sel?" selected":""}`}
+                onClick={() => setAnswers(p => ({...p,[q.id]:opt.value}))}>
+                <div style={{width:18,height:18,borderRadius:"50%",flexShrink:0,border:`2px solid ${sel?"#1a1a1a":"#ccc"}`,background:sel?"#1a1a1a":"#fff",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",transition:"all 0.12s"}}>
+                  {sel && <CheckIcon/>}
+                </div>
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+ 
+      {q.type === "multi" && (
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.5rem",marginBottom:"2rem"}}>
+          {q.options.map(opt => {
+            const sel = (answers[q.id]||[]).includes(opt.value);
+            return (
+              <button key={opt.value}
+                className={`opt-btn${sel?" selected":""}`}
+                onClick={() => {
+                  const cur = answers[q.id]||[];
+                  setAnswers(p => ({...p,[q.id]:cur.includes(opt.value)?cur.filter(v=>v!==opt.value):[...cur,opt.value]}));
+                }}>
+                <div style={{width:16,height:16,borderRadius:2,flexShrink:0,border:`2px solid ${sel?"#1a1a1a":"#ccc"}`,background:sel?"#1a1a1a":"#fff",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",transition:"all 0.12s"}}>
+                  {sel && <CheckIcon/>}
+                </div>
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+ 
+      {q.type === "text" && (
+        <div style={{marginBottom:"2rem"}}>
+          <textarea rows={3} placeholder={q.placeholder} value={answers[q.id]||""}
+            onChange={e => setAnswers(p => ({...p,[q.id]:e.target.value}))}
+            style={{width:"100%",padding:"0.85rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",fontFamily:"'Albert Sans',system-ui,sans-serif",resize:"vertical",outline:"none",lineHeight:1.6}}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+      )}
+ 
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <button onClick={()=>setStep(s=>s-1)} disabled={step===0} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",padding:"0.6rem 1.25rem",
+          borderRadius:3,fontSize:"0.8rem",fontWeight:700,letterSpacing:"0.05em",
+          background:"#f0f0f0",color:"#555",border:"1px solid #ddd",cursor:"pointer",
+          fontFamily:"'Albert Sans',system-ui,sans-serif",opacity:step===0?0.35:1,
+        }}><ArrowLeft/> BACK</button>
+        <button onClick={handleNext} disabled={!canAdvance()} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",padding:"0.6rem 1.25rem",
+          borderRadius:3,fontSize:"0.8rem",fontWeight:700,letterSpacing:"0.05em",
+          background:canAdvance()?"#1a1a1a":"#ccc",color:"#fff",border:"none",cursor:"pointer",
+          fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}>{isLast?"FIND MY WATCHES":"NEXT"} <ArrowRight/></button>
+      </div>
+    </div>
+  );
+}
+ 
+// ─── App Shell ────────────────────────────────────────────────────────────────
+ 
+export default function App() {
+  const [activePage, setActivePage] = useState("finder");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+ 
+  const activeNav = NAV_ITEMS.find(n => n.id === activePage);
+ 
+  return (
+    <div style={{display:"flex",minHeight:"100vh",background:"#f5f5f3",fontFamily:"'Albert Sans',system-ui,sans-serif"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { margin: 0; background: #f5f5f3; }
         .opt-btn {
           display: flex; align-items: center; gap: 0.75rem;
           width: 100%; padding: 0.75rem 1rem;
@@ -331,155 +532,144 @@ export default function WatchQuiz() {
         }
         .opt-btn:hover { border-color: #1a1a1a; }
         .opt-btn.selected { border-color: #1a1a1a; background: #fafafa; }
-        .nav-btn {
-          display: inline-flex; align-items: center; gap: 0.5rem;
-          padding: 0.6rem 1.25rem; border-radius: 3px;
-          font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+        .nav-item {
+          display: flex; align-items: center; gap: 0.65rem;
+          padding: 0.6rem 1rem; border-radius: 3px; cursor: pointer;
+          transition: background 0.12s; width: 100%; border: none;
           font-family: 'Albert Sans', system-ui, sans-serif;
-          cursor: pointer; transition: opacity 0.12s;
+          font-size: 0.82rem; font-weight: 600; letter-spacing: 0.01em;
+          text-align: left; background: transparent; color: #888;
         }
-        .nav-btn:hover { opacity: 0.75; }
-        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .nav-item:hover { background: rgba(255,255,255,0.06); color: #ccc; }
+        .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
+        .nav-item.disabled { opacity: 0.45; cursor: default; }
+        .nav-item.disabled:hover { background: transparent; color: #888; }
+        @media (max-width: 768px) {
+          .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; position: fixed !important; z-index: 100; height: 100vh !important; }
+          .sidebar.open { transform: translateX(0); }
+          .overlay { display: block !important; }
+        }
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+        @keyframes spin{to{transform:rotate(360deg)}}
       `}</style>
-
-      <main style={{maxWidth:600,margin:"0 auto",padding:"1.5rem 1.25rem 3rem"}}>
-
-        {results && !loading && (
-          <div>
-            <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
-              <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>
-                YOUR RESULTS
-              </p>
-              <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>
-                Three watches picked for you
-              </h2>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
-              {results.map((watch, i) => <WatchCard key={i} watch={watch} index={i}/>)}
-            </div>
-            <button className="nav-btn" onClick={reset}
-              style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}>
-              <ArrowLeft/> START OVER
+ 
+      {/* Sidebar overlay for mobile */}
+      <div className="overlay" onClick={() => setSidebarOpen(false)} style={{
+        display:"none",position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:99,
+      }}/>
+ 
+      {/* Sidebar */}
+      <aside className={`sidebar${sidebarOpen?" open":""}`} style={{
+        width:220,background:"#1a1a1a",display:"flex",flexDirection:"column",
+        position:"sticky",top:0,height:"100vh",flexShrink:0,
+      }}>
+        {/* Logo */}
+        <div style={{padding:"1.25rem 1rem 1rem",borderBottom:"1px solid rgba(255,255,255,0.07)"}}>
+          <a href="https://dougswatches.co.uk" target="_blank" rel="noopener noreferrer"
+            style={{textDecoration:"none",display:"block"}}>
+            <p style={{fontSize:"0.95rem",fontWeight:700,color:"#fff",letterSpacing:"0.01em",margin:0}}>
+              Doug's Watches
+            </p>
+            <p style={{fontSize:"0.65rem",color:"#666",letterSpacing:"0.1em",margin:"0.2rem 0 0"}}>
+              TOOLS & RESEARCH
+            </p>
+          </a>
+        </div>
+ 
+        {/* Nav */}
+        <nav style={{flex:1,padding:"0.75rem 0.5rem",display:"flex",flexDirection:"column",gap:"0.15rem"}}>
+          <p style={{fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.14em",color:"#555",padding:"0.5rem 0.5rem 0.25rem"}}>
+            TOOLS
+          </p>
+          {NAV_ITEMS.map(item => (
+            <button key={item.id}
+              className={`nav-item${activePage===item.id?" active":""}${!item.live?" disabled":""}`}
+              onClick={() => { if (item.live || true) { setActivePage(item.id); setSidebarOpen(false); } }}>
+              <span style={{fontSize:"0.8rem",opacity:0.7}}>{item.icon}</span>
+              <span style={{flex:1}}>{item.label}</span>
+              <span style={{
+                fontSize:"0.58rem",fontWeight:700,letterSpacing:"0.1em",
+                padding:"0.15rem 0.4rem",borderRadius:2,
+                background: item.badge === "FREE" ? "rgba(45,106,79,0.4)" :
+                            item.badge === "PRO" ? "rgba(255,255,255,0.15)" :
+                            "rgba(255,255,255,0.07)",
+                color: item.badge === "FREE" ? "#6fcf97" :
+                       item.badge === "PRO" ? "#fff" : "#555",
+              }}>{item.badge}</span>
             </button>
-          </div>
-        )}
-
-        {loading && <Loader/>}
-
-        {error && !loading && (
-          <div style={{textAlign:"center",padding:"2rem 1rem"}}>
-            <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
-            <button className="nav-btn" onClick={submitQuiz}
-              style={{background:"#1a1a1a",color:"#fff",border:"none"}}>
-              TRY AGAIN
+          ))}
+        </nav>
+ 
+        {/* Footer */}
+        <div style={{padding:"1rem",borderTop:"1px solid rgba(255,255,255,0.07)"}}>
+          <a href="https://dougswatches.co.uk" target="_blank" rel="noopener noreferrer"
+            style={{
+              display:"flex",alignItems:"center",gap:"0.5rem",
+              fontSize:"0.75rem",fontWeight:600,color:"#555",
+              textDecoration:"none",letterSpacing:"0.03em",
+              transition:"color 0.12s",
+            }}
+            onMouseEnter={e=>e.currentTarget.style.color="#aaa"}
+            onMouseLeave={e=>e.currentTarget.style.color="#555"}
+          >
+            <ArrowLeft/> Back to site
+          </a>
+        </div>
+      </aside>
+ 
+      {/* Main */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
+        {/* Top bar */}
+        <header style={{
+          background:"#fff",borderBottom:"1px solid #e8e8e8",
+          padding:"0 1.5rem",height:52,
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+          position:"sticky",top:0,zIndex:10,flexShrink:0,
+        }}>
+          <div style={{display:"flex",alignItems:"center",gap:"0.75rem"}}>
+            {/* Mobile menu button */}
+            <button onClick={()=>setSidebarOpen(s=>!s)} style={{
+              display:"none",background:"none",border:"none",cursor:"pointer",
+              color:"#1a1a1a",padding:"0.25rem",
+            }} className="mobile-menu-btn">
+              {sidebarOpen ? <CloseIcon/> : <MenuIcon/>}
             </button>
-          </div>
-        )}
-
-        {!results && !loading && !error && (
-          <div>
-            <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
-              <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>
-                QUESTION {step + 1} OF {questions.length}
+            <div>
+              <p style={{fontSize:"0.95rem",fontWeight:700,color:"#1a1a1a",margin:0,lineHeight:1}}>
+                {activeNav?.label}
               </p>
-              <div style={{height:2,background:"#e8e8e8",marginBottom:"1.25rem"}}>
-                <div style={{
-                  height:"100%",background:"#1a1a1a",
-                  width:`${(step / questions.length) * 100}%`,
-                  transition:"width 0.3s ease"
-                }}/>
-              </div>
-              <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>
-                {q.label}
-              </h2>
-              {q.subtitle && <p style={{fontSize:"0.85rem",color:"#888"}}>{q.subtitle}</p>}
-            </div>
-
-            {q.type === "single" && (
-              <div style={{display:"flex",flexDirection:"column",gap:"0.5rem",marginBottom:"2rem"}}>
-                {q.options.map(opt => {
-                  const sel = answers[q.id] === opt.value;
-                  return (
-                    <button key={opt.value}
-                      className={`opt-btn${sel ? " selected" : ""}`}
-                      onClick={() => setAnswers(prev => ({...prev,[q.id]:opt.value}))}>
-                      <div style={{
-                        width:18,height:18,borderRadius:"50%",flexShrink:0,
-                        border:`2px solid ${sel ? "#1a1a1a" : "#ccc"}`,
-                        background: sel ? "#1a1a1a" : "#fff",
-                        display:"flex",alignItems:"center",justifyContent:"center",
-                        color:"#fff",transition:"all 0.12s"
-                      }}>{sel && <CheckIcon/>}</div>
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {q.type === "multi" && (
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.5rem",marginBottom:"2rem"}}>
-                {q.options.map(opt => {
-                  const sel = (answers[q.id] || []).includes(opt.value);
-                  return (
-                    <button key={opt.value}
-                      className={`opt-btn${sel ? " selected" : ""}`}
-                      onClick={() => {
-                        const current = answers[q.id] || [];
-                        setAnswers(prev => ({
-                          ...prev,
-                          [q.id]: current.includes(opt.value)
-                            ? current.filter(v => v !== opt.value)
-                            : [...current, opt.value],
-                        }));
-                      }}>
-                      <div style={{
-                        width:16,height:16,borderRadius:2,flexShrink:0,
-                        border:`2px solid ${sel ? "#1a1a1a" : "#ccc"}`,
-                        background: sel ? "#1a1a1a" : "#fff",
-                        display:"flex",alignItems:"center",justifyContent:"center",
-                        color:"#fff",transition:"all 0.12s"
-                      }}>{sel && <CheckIcon/>}</div>
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-
-            {q.type === "text" && (
-              <div style={{marginBottom:"2rem"}}>
-                <textarea rows={3} placeholder={q.placeholder}
-                  value={answers[q.id] || ""}
-                  onChange={e => setAnswers(prev => ({...prev,[q.id]:e.target.value}))}
-                  style={{
-                    width:"100%",padding:"0.85rem 1rem",
-                    border:"1px solid #e0e0e0",borderRadius:3,
-                    background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
-                    fontFamily:"'Albert Sans',system-ui,sans-serif",
-                    resize:"vertical",outline:"none",lineHeight:1.6,
-                  }}
-                  onFocus={e => e.target.style.borderColor="#1a1a1a"}
-                  onBlur={e => e.target.style.borderColor="#e0e0e0"}
-                />
-              </div>
-            )}
-
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <button className="nav-btn" onClick={() => setStep(s => s - 1)}
-                disabled={step === 0}
-                style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}>
-                <ArrowLeft/> BACK
-              </button>
-              <button className="nav-btn" onClick={handleNext}
-                disabled={!canAdvance()}
-                style={{background: canAdvance() ? "#1a1a1a" : "#ccc",color:"#fff",border:"none"}}>
-                {isLast ? "FIND MY WATCHES" : "NEXT"} <ArrowRight/>
-              </button>
             </div>
           </div>
-        )}
-      </main>
+          <div style={{display:"flex",alignItems:"center",gap:"0.75rem"}}>
+            <span style={{
+              fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",
+              padding:"0.25rem 0.6rem",borderRadius:2,
+              background:"#f0f0f0",color:"#888",
+            }}>
+              {activeNav?.badge}
+            </span>
+            <a href="https://dougswatches.co.uk" target="_blank" rel="noopener noreferrer"
+              style={{
+                fontSize:"0.75rem",fontWeight:700,letterSpacing:"0.05em",
+                padding:"0.45rem 0.9rem",borderRadius:3,
+                background:"#1a1a1a",color:"#fff",textDecoration:"none",
+              }}>
+              SIGN IN
+            </a>
+          </div>
+        </header>
+ 
+        {/* Page content */}
+        <main style={{flex:1,overflowY:"auto",padding:"0"}}>
+          <style>{`
+            @media (max-width: 768px) {
+              .mobile-menu-btn { display: flex !important; }
+            }
+          `}</style>
+          {activePage === "finder" && <WatchFinder/>}
+          {activePage !== "finder" && <ComingSoon toolId={activePage}/>}
+        </main>
+      </div>
     </div>
   );
 }
