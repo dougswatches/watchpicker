@@ -294,9 +294,14 @@ export default function WatchQuiz() {
         body: JSON.stringify({ prompt: buildPrompt(answers) }),
       });
       const data = await response.json();
-      const text = data.text || '';
-      const clean = text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(clean);
+const text = data.text || '';
+const clean = text
+  .replace(/```json/g, '')
+  .replace(/```/g, '')
+  .trim();
+const jsonMatch = clean.match(/\[[\s\S]*\]/);
+if (!jsonMatch) throw new Error('No JSON array found');
+const parsed = JSON.parse(jsonMatch[0]);
       setResults(parsed);
     } catch (e) {
       setError('Something went wrong fetching recommendations. Please try again.');
