@@ -284,31 +284,32 @@ export default function WatchQuiz() {
   };
 
   const submitQuiz = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/api/recommend', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: buildPrompt(answers) }),
-      });
-      const data = await response.json();
-      const text = data.text || '';
-      const clean = text
-        .replace(/```json/gi, '')
-        .replace(/```/g, '')
-        .trim();
-      const jsonMatch = clean.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error('No JSON array found in response');
-      const parsed = JSON.parse(jsonMatch[0]);
-      setResults(parsed);
-    } catch (e) {
-      console.error('Quiz error:', e);
-      setError('Something went wrong fetching recommendations. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  setError(null);
+  try {
+    const response = await fetch('/api/recommend', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: buildPrompt(answers) }),
+    });
+    const data = await response.json();
+    const text = data.text || '';
+    const clean = text
+      .replace(/```json/gi, '')
+      .replace(/```/g, '')
+      .trim();
+    const start = clean.indexOf('[');
+    const end = clean.lastIndexOf(']');
+    if (start === -1 || end === -1) throw new Error('No JSON array found');
+    const parsed = JSON.parse(clean.slice(start, end + 1));
+    setResults(parsed);
+  } catch (e) {
+    console.error('Quiz error:', e.message);
+    setError('Something went wrong fetching recommendations. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const reset = () => {
     setStep(0);
