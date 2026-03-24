@@ -299,6 +299,9 @@ const clean = text
   .replace(/```json/g, '')
   .replace(/```/g, '')
   .trim();
+console.log('RAW RESPONSE:', text);
+console.log('CLEANED:', clean);
+const jsonMatch = clean.match(/\[[\s\S]*\]/);
 const jsonMatch = clean.match(/\[[\s\S]*\]/);
 if (!jsonMatch) throw new Error('No JSON array found');
 const parsed = JSON.parse(jsonMatch[0]);
