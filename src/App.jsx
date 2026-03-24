@@ -145,7 +145,7 @@ const CheckIcon = () => (
 );
 
 const Loader = () => (
-  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
+  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"3rem 2rem"}}>
     <div style={{
       width:40,height:40,borderRadius:"50%",
       border:"2px solid #e8e8e8",
@@ -176,13 +176,9 @@ function WatchCard({ watch, index }) {
         padding:"1rem 1.25rem",
         display:"flex",alignItems:"center",gap:"0.75rem"
       }}>
-        <span style={{
-          fontSize:"0.7rem",
-          fontWeight:700,
-          letterSpacing:"0.12em",
-          color:"#888",
-          minWidth:20,
-        }}>0{index + 1}</span>
+        <span style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#666",minWidth:20}}>
+          0{index + 1}
+        </span>
         <div style={{flex:1,minWidth:0}}>
           <p style={{fontSize:"1rem",fontWeight:700,color:"#fff",margin:0,lineHeight:1.3}}>
             {watch.name}
@@ -199,13 +195,9 @@ function WatchCard({ watch, index }) {
         <div style={{display:"flex",flexWrap:"wrap",gap:"0.35rem",marginBottom:"1.25rem"}}>
           {watch.specs.map((spec,i) => (
             <span key={i} style={{
-              fontSize:"0.75rem",
-              padding:"0.2rem 0.55rem",
-              borderRadius:2,
-              background:"#f5f5f5",
-              color:"#555",
-              border:"1px solid #e8e8e8",
-              fontWeight:500,
+              fontSize:"0.75rem",padding:"0.2rem 0.55rem",
+              borderRadius:2,background:"#f5f5f5",
+              color:"#555",border:"1px solid #e8e8e8",fontWeight:500,
             }}>{spec}</span>
           ))}
         </div>
@@ -215,11 +207,9 @@ function WatchCard({ watch, index }) {
           rel="noopener noreferrer"
           style={{
             display:"inline-flex",alignItems:"center",gap:"0.4rem",
-            fontSize:"0.8rem",fontWeight:700,
-            color:"#1a1a1a",textDecoration:"none",
-            letterSpacing:"0.04em",
-            borderBottom:"2px solid #1a1a1a",
-            paddingBottom:"1px",
+            fontSize:"0.8rem",fontWeight:700,color:"#1a1a1a",
+            textDecoration:"none",letterSpacing:"0.04em",
+            borderBottom:"2px solid #1a1a1a",paddingBottom:"1px",
           }}
         >
           VIEW ON CHRONO24 <ExternalLinkIcon/>
@@ -244,14 +234,6 @@ export default function WatchQuiz() {
     if (q.type === "multi") return (answers[q.id] || []).length > 0;
     if (q.type === "text") return true;
     return false;
-  };
-
-  const toggleMulti = (qid, val) => {
-    const current = answers[qid] || [];
-    setAnswers(prev => ({
-      ...prev,
-      [qid]: current.includes(val) ? current.filter(v => v !== val) : [...current, val],
-    }));
   };
 
   const handleNext = () => {
@@ -292,75 +274,48 @@ export default function WatchQuiz() {
     setLoading(false);
   };
 
-  const accent = "#1a1a1a";
-  const red = "#c0392b";
-
   return (
     <div style={{
-      minHeight:"100vh",
       background:"#f9f9f9",
       fontFamily:"'Albert Sans', system-ui, sans-serif",
+      padding:"0",
     }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { margin: 0; background: #f9f9f9; }
         .opt-btn {
           display: flex; align-items: center; gap: 0.75rem;
           width: 100%; padding: 0.75rem 1rem;
-          background: #fff;
-          border: 1px solid #e0e0e0;
+          background: #fff; border: 1px solid #e0e0e0;
           border-radius: 3px; cursor: pointer;
           font-size: 0.9rem; font-family: 'Albert Sans', system-ui, sans-serif;
-          color: #1a1a1a; font-weight: 500;
-          text-align: left; transition: border-color 0.12s, background 0.12s;
+          color: #1a1a1a; font-weight: 500; text-align: left;
+          transition: border-color 0.12s, background 0.12s;
         }
-        .opt-btn:hover { border-color: #1a1a1a; background: #fafafa; }
-        .opt-btn.selected { border-color: #1a1a1a; background: #fff; }
+        .opt-btn:hover { border-color: #1a1a1a; }
+        .opt-btn.selected { border-color: #1a1a1a; background: #fafafa; }
         .nav-btn {
           display: inline-flex; align-items: center; gap: 0.5rem;
-          padding: 0.6rem 1.25rem;
-          border-radius: 3px; font-size: 0.8rem; font-weight: 700;
+          padding: 0.6rem 1.25rem; border-radius: 3px;
+          font-size: 0.8rem; font-weight: 700;
           font-family: 'Albert Sans', system-ui, sans-serif;
-          cursor: pointer; transition: opacity 0.12s;
-          letter-spacing: 0.05em;
+          cursor: pointer; transition: opacity 0.12s; letter-spacing: 0.05em;
         }
         .nav-btn:hover { opacity: 0.75; }
         .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
       `}</style>
 
-      <header style={{
-        background:"#1a1a1a",
-        padding:"0.9rem 1.5rem",
-        display:"flex",alignItems:"center",justifyContent:"space-between"
-      }}>
-        <div>
-          <span style={{fontSize:"0.95rem",fontWeight:700,color:"#fff",letterSpacing:"0.02em"}}>
-            Doug's Watches
-          </span>
-          <span style={{
-            marginLeft:"0.75rem",fontSize:"0.7rem",fontWeight:600,
-            color:"#888",letterSpacing:"0.1em",
-          }}>
-            WATCH FINDER
-          </span>
-        </div>
-        <a href="https://dougswatches.co.uk" style={{fontSize:"0.75rem",color:"#888",textDecoration:"none",letterSpacing:"0.05em"}}>
-          ← BACK TO SITE
-        </a>
-      </header>
-
-      <main style={{maxWidth:600,margin:"0 auto",padding:"2.5rem 1.25rem 5rem"}}>
+      <main style={{maxWidth:600,margin:"0 auto",padding:"1.5rem 1.25rem 3rem"}}>
 
         {results && !loading && (
           <div>
-            <div style={{marginBottom:"2rem",paddingBottom:"1.5rem",borderBottom:"2px solid #1a1a1a"}}>
+            <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
               <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>
                 YOUR RESULTS
               </p>
-              <h1 style={{fontSize:"1.6rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>
+              <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>
                 Three watches picked for you
-              </h1>
+              </h2>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
               {results.map((watch, i) => <WatchCard key={i} watch={watch} index={i}/>)}
@@ -378,8 +333,8 @@ export default function WatchQuiz() {
         {loading && <Loader/>}
 
         {error && !loading && (
-          <div style={{textAlign:"center",padding:"3rem 1rem"}}>
-            <p style={{color:red,marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
+          <div style={{textAlign:"center",padding:"2rem 1rem"}}>
+            <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
             <button className="nav-btn" onClick={submitQuiz}
               style={{background:"#1a1a1a",color:"#fff",border:"none"}}>
               TRY AGAIN
@@ -389,24 +344,22 @@ export default function WatchQuiz() {
 
         {!results && !loading && !error && (
           <div>
-            <div style={{marginBottom:"2rem",paddingBottom:"1.5rem",borderBottom:"2px solid #1a1a1a"}}>
-              <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>
+            <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+              <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>
                 QUESTION {step + 1} OF {questions.length}
               </p>
-              <div style={{height:2,background:"#e8e8e8",borderRadius:0,marginBottom:"1.25rem"}}>
+              <div style={{height:2,background:"#e8e8e8",marginBottom:"1.25rem"}}>
                 <div style={{
                   height:"100%",background:"#1a1a1a",
-                  width:`${((step) / questions.length) * 100}%`,
+                  width:`${(step / questions.length) * 100}%`,
                   transition:"width 0.3s ease"
                 }}/>
               </div>
-              <h1 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.35rem"}}>
+              <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>
                 {q.label}
-              </h1>
+              </h2>
               {q.subtitle && (
-                <p style={{fontSize:"0.875rem",color:"#888",fontWeight:400}}>
-                  {q.subtitle}
-                </p>
+                <p style={{fontSize:"0.85rem",color:"#888"}}>{q.subtitle}</p>
               )}
             </div>
 
@@ -479,15 +432,11 @@ export default function WatchQuiz() {
                   onChange={e => setAnswers(prev => ({...prev,[q.id]:e.target.value}))}
                   style={{
                     width:"100%",padding:"0.85rem 1rem",
-                    border:"1px solid #e0e0e0",
-                    borderRadius:3,
-                    background:"#fff",
-                    color:"#1a1a1a",
+                    border:"1px solid #e0e0e0",borderRadius:3,
+                    background:"#fff",color:"#1a1a1a",
                     fontSize:"0.9rem",
                     fontFamily:"'Albert Sans', system-ui, sans-serif",
-                    resize:"vertical",outline:"none",
-                    lineHeight:1.6,
-                    transition:"border-color 0.12s"
+                    resize:"vertical",outline:"none",lineHeight:1.6,
                   }}
                   onFocus={e => e.target.style.borderColor="#1a1a1a"}
                   onBlur={e => e.target.style.borderColor="#e0e0e0"}
