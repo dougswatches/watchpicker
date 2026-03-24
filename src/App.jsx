@@ -103,19 +103,17 @@ function buildPrompt(answers) {
 - Brand preferences: ${brands}
 - Watch type: ${type}
 - Existing watches: ${existing}
-Recommend exactly 3 watches that perfectly match this profile. For each watch provide:
-1. A specific model name (brand + model + reference if relevant)
-2. A typical market price (be accurate)
-3. A Chrono24 search URL: https://www.chrono24.com/search/index.htm?query=WATCH+NAME+URL+ENCODED
-4. A compelling 2-3 sentence reason why this watch is perfect for this customer
-5. 3 key specs (e.g. case size, movement, water resistance)
-Respond ONLY with a JSON array of 3 objects with these exact keys:
-- "name": string
-- "price": string
-- "chrono24_url": string
-- "reason": string
-- "specs": array of 3 strings
-Return raw JSON only. No markdown, no code blocks, no explanation. Just the raw JSON array starting with [ and ending with ].`;
+
+Recommend exactly 3 watches that perfectly match this profile.
+
+For each watch return a JSON object with these exact keys:
+- "name": string — specific model name e.g. "Seiko Prospex SPB143"
+- "price": string — accurate market price e.g. "~£320 new / ~£250 pre-owned"
+- "availability": string — one of exactly: "new", "preowned", or "both"
+- "reason": string — 2-3 sentences explaining why this watch suits this customer specifically
+- "specs": array of exactly 3 strings e.g. ["40mm case", "Automatic movement", "200m water resistance"]
+
+Return ONLY a raw JSON array of 3 objects. No markdown, no code blocks, no explanation. Start with [ and end with ].`;
 }
 
 const ArrowRight = () => (
@@ -130,17 +128,17 @@ const ArrowLeft = () => (
   </svg>
 );
 
-const ExternalLinkIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
-    <path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <path d="M8 1h4v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-    <line x1="12" y1="1" x2="6" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-  </svg>
-);
-
 const CheckIcon = () => (
   <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
     <polyline points="2.5,7 5.5,10 11.5,4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ExternalIcon = () => (
+  <svg width="10" height="10" viewBox="0 0 13 13" fill="none">
+    <path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    <path d="M8 1h4v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+    <line x1="12" y1="1" x2="6" y2="7" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
   </svg>
 );
 
@@ -148,34 +146,30 @@ const Loader = () => (
   <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"3rem 2rem"}}>
     <div style={{
       width:40,height:40,borderRadius:"50%",
-      border:"2px solid #e8e8e8",
-      borderTopColor:"#1a1a1a",
+      border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",
       animation:"spin 0.8s linear infinite"
     }}/>
     <div style={{textAlign:"center"}}>
       <p style={{fontSize:"1rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Finding your watches</p>
-      <p style={{fontSize:"0.85rem",color:"#888",margin:0}}>Our expert is reviewing your profile…</p>
+      <p style={{fontSize:"0.85rem",color:"#888",margin:0}}>Searching across all our partners…</p>
     </div>
     <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </div>
 );
 
 function WatchCard({ watch, index }) {
+  const [showAll, setShowAll] = useState(false);
+  const links = watch.buy_links || [];
+  const visibleLinks = showAll ? links : links.slice(0, 3);
+
   return (
     <div style={{
-      background:"#fff",
-      border:"1px solid #e8e8e8",
-      borderRadius:4,
-      overflow:"hidden",
-      animation:`fadeUp 0.4s ease both`,
+      background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
+      overflow:"hidden",animation:`fadeUp 0.4s ease both`,
       animationDelay:`${index * 0.1}s`,
     }}>
       <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}`}</style>
-      <div style={{
-        background:"#1a1a1a",
-        padding:"1rem 1.25rem",
-        display:"flex",alignItems:"center",gap:"0.75rem"
-      }}>
+      <div style={{background:"#1a1a1a",padding:"1rem 1.25rem",display:"flex",alignItems:"center",gap:"0.75rem"}}>
         <span style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#666",minWidth:20}}>
           0{index + 1}
         </span>
@@ -183,37 +177,75 @@ function WatchCard({ watch, index }) {
           <p style={{fontSize:"1rem",fontWeight:700,color:"#fff",margin:0,lineHeight:1.3}}>
             {watch.name}
           </p>
-          <p style={{fontSize:"0.8rem",color:"#999",margin:"0.2rem 0 0"}}>
-            {watch.price}
-          </p>
+          <p style={{fontSize:"0.8rem",color:"#999",margin:"0.2rem 0 0"}}>{watch.price}</p>
         </div>
+        {watch.availability && (
+          <span style={{
+            fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",
+            padding:"0.2rem 0.5rem",borderRadius:2,
+            background: watch.availability === 'new' ? "#2d6a4f" : watch.availability === 'preowned' ? "#1d3557" : "#555",
+            color:"#fff",whiteSpace:"nowrap",flexShrink:0,
+          }}>
+            {watch.availability === 'new' ? 'NEW' : watch.availability === 'preowned' ? 'PRE-OWNED' : 'NEW & PRE-OWNED'}
+          </span>
+        )}
       </div>
+
       <div style={{padding:"1.25rem"}}>
         <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:"0 0 1rem"}}>
           {watch.reason}
         </p>
         <div style={{display:"flex",flexWrap:"wrap",gap:"0.35rem",marginBottom:"1.25rem"}}>
-          {watch.specs.map((spec,i) => (
+          {(watch.specs || []).map((spec,i) => (
             <span key={i} style={{
-              fontSize:"0.75rem",padding:"0.2rem 0.55rem",
-              borderRadius:2,background:"#f5f5f5",
-              color:"#555",border:"1px solid #e8e8e8",fontWeight:500,
+              fontSize:"0.75rem",padding:"0.2rem 0.55rem",borderRadius:2,
+              background:"#f5f5f5",color:"#555",border:"1px solid #e8e8e8",fontWeight:500,
             }}>{spec}</span>
           ))}
         </div>
-        <a
-          href={watch.chrono24_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display:"inline-flex",alignItems:"center",gap:"0.4rem",
-            fontSize:"0.8rem",fontWeight:700,color:"#1a1a1a",
-            textDecoration:"none",letterSpacing:"0.04em",
-            borderBottom:"2px solid #1a1a1a",paddingBottom:"1px",
-          }}
-        >
-          VIEW ON CHRONO24 <ExternalLinkIcon/>
-        </a>
+
+        <div style={{borderTop:"1px solid #f0f0f0",paddingTop:"1rem"}}>
+          <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>
+            WHERE TO BUY
+          </p>
+          <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
+            {visibleLinks.map((link, i) => (
+              <a
+                key={i}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display:"inline-flex",alignItems:"center",gap:"0.3rem",
+                  fontSize:"0.75rem",fontWeight:600,color:"#1a1a1a",
+                  textDecoration:"none",letterSpacing:"0.03em",
+                  padding:"0.35rem 0.65rem",
+                  border:"1px solid #e0e0e0",borderRadius:3,
+                  background:"#fafafa",
+                  transition:"border-color 0.12s,background 0.12s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
+              >
+                {link.label} <ExternalIcon/>
+              </a>
+            ))}
+            {links.length > 3 && !showAll && (
+              <button
+                onClick={() => setShowAll(true)}
+                style={{
+                  fontSize:"0.75rem",fontWeight:600,color:"#888",
+                  padding:"0.35rem 0.65rem",border:"1px solid #e0e0e0",
+                  borderRadius:3,background:"#fafafa",cursor:"pointer",
+                  fontFamily:"'Albert Sans',system-ui,sans-serif",
+                  letterSpacing:"0.03em",
+                }}
+              >
+                +{links.length - 3} more
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -251,13 +283,11 @@ export default function WatchQuiz() {
         body: JSON.stringify({ prompt: buildPrompt(answers) }),
       });
       const data = await response.json();
-      const text = data.text || '';
-      const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const start = clean.indexOf('[');
-      const end = clean.lastIndexOf(']');
-      if (start === -1 || end === -1) throw new Error('No JSON array found');
-      const parsed = JSON.parse(clean.slice(start, end + 1));
-      setResults(parsed);
+      if (data.watches) {
+        setResults(data.watches);
+      } else {
+        throw new Error('No watches in response');
+      }
     } catch (e) {
       console.error('Quiz error:', e.message);
       setError('Something went wrong. Please try again.');
@@ -275,31 +305,27 @@ export default function WatchQuiz() {
   };
 
   return (
-    <div style={{
-      background:"#f9f9f9",
-      fontFamily:"'Albert Sans', system-ui, sans-serif",
-      padding:"0",
-    }}>
+    <div style={{background:"#f9f9f9",fontFamily:"'Albert Sans',system-ui,sans-serif"}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         .opt-btn {
           display: flex; align-items: center; gap: 0.75rem;
           width: 100%; padding: 0.75rem 1rem;
-          background: #fff; border: 1px solid #e0e0e0;
-          border-radius: 3px; cursor: pointer;
-          font-size: 0.9rem; font-family: 'Albert Sans', system-ui, sans-serif;
+          background: #fff; border: 1px solid #e0e0e0; border-radius: 3px;
+          cursor: pointer; font-size: 0.9rem;
+          font-family: 'Albert Sans', system-ui, sans-serif;
           color: #1a1a1a; font-weight: 500; text-align: left;
-          transition: border-color 0.12s, background 0.12s;
+          transition: border-color 0.12s;
         }
         .opt-btn:hover { border-color: #1a1a1a; }
         .opt-btn.selected { border-color: #1a1a1a; background: #fafafa; }
         .nav-btn {
           display: inline-flex; align-items: center; gap: 0.5rem;
           padding: 0.6rem 1.25rem; border-radius: 3px;
-          font-size: 0.8rem; font-weight: 700;
+          font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
           font-family: 'Albert Sans', system-ui, sans-serif;
-          cursor: pointer; transition: opacity 0.12s; letter-spacing: 0.05em;
+          cursor: pointer; transition: opacity 0.12s;
         }
         .nav-btn:hover { opacity: 0.75; }
         .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
@@ -320,11 +346,8 @@ export default function WatchQuiz() {
             <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
               {results.map((watch, i) => <WatchCard key={i} watch={watch} index={i}/>)}
             </div>
-            <button
-              className="nav-btn"
-              onClick={reset}
-              style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}
-            >
+            <button className="nav-btn" onClick={reset}
+              style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}>
               <ArrowLeft/> START OVER
             </button>
           </div>
@@ -358,9 +381,7 @@ export default function WatchQuiz() {
               <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>
                 {q.label}
               </h2>
-              {q.subtitle && (
-                <p style={{fontSize:"0.85rem",color:"#888"}}>{q.subtitle}</p>
-              )}
+              {q.subtitle && <p style={{fontSize:"0.85rem",color:"#888"}}>{q.subtitle}</p>}
             </div>
 
             {q.type === "single" && (
@@ -368,20 +389,16 @@ export default function WatchQuiz() {
                 {q.options.map(opt => {
                   const sel = answers[q.id] === opt.value;
                   return (
-                    <button
-                      key={opt.value}
+                    <button key={opt.value}
                       className={`opt-btn${sel ? " selected" : ""}`}
-                      onClick={() => setAnswers(prev => ({...prev,[q.id]:opt.value}))}
-                    >
+                      onClick={() => setAnswers(prev => ({...prev,[q.id]:opt.value}))}>
                       <div style={{
                         width:18,height:18,borderRadius:"50%",flexShrink:0,
                         border:`2px solid ${sel ? "#1a1a1a" : "#ccc"}`,
                         background: sel ? "#1a1a1a" : "#fff",
                         display:"flex",alignItems:"center",justifyContent:"center",
                         color:"#fff",transition:"all 0.12s"
-                      }}>
-                        {sel && <CheckIcon/>}
-                      </div>
+                      }}>{sel && <CheckIcon/>}</div>
                       {opt.label}
                     </button>
                   );
@@ -394,8 +411,7 @@ export default function WatchQuiz() {
                 {q.options.map(opt => {
                   const sel = (answers[q.id] || []).includes(opt.value);
                   return (
-                    <button
-                      key={opt.value}
+                    <button key={opt.value}
                       className={`opt-btn${sel ? " selected" : ""}`}
                       onClick={() => {
                         const current = answers[q.id] || [];
@@ -405,17 +421,14 @@ export default function WatchQuiz() {
                             ? current.filter(v => v !== opt.value)
                             : [...current, opt.value],
                         }));
-                      }}
-                    >
+                      }}>
                       <div style={{
                         width:16,height:16,borderRadius:2,flexShrink:0,
                         border:`2px solid ${sel ? "#1a1a1a" : "#ccc"}`,
                         background: sel ? "#1a1a1a" : "#fff",
                         display:"flex",alignItems:"center",justifyContent:"center",
                         color:"#fff",transition:"all 0.12s"
-                      }}>
-                        {sel && <CheckIcon/>}
-                      </div>
+                      }}>{sel && <CheckIcon/>}</div>
                       {opt.label}
                     </button>
                   );
@@ -425,17 +438,14 @@ export default function WatchQuiz() {
 
             {q.type === "text" && (
               <div style={{marginBottom:"2rem"}}>
-                <textarea
-                  rows={3}
-                  placeholder={q.placeholder}
+                <textarea rows={3} placeholder={q.placeholder}
                   value={answers[q.id] || ""}
                   onChange={e => setAnswers(prev => ({...prev,[q.id]:e.target.value}))}
                   style={{
                     width:"100%",padding:"0.85rem 1rem",
                     border:"1px solid #e0e0e0",borderRadius:3,
-                    background:"#fff",color:"#1a1a1a",
-                    fontSize:"0.9rem",
-                    fontFamily:"'Albert Sans', system-ui, sans-serif",
+                    background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+                    fontFamily:"'Albert Sans',system-ui,sans-serif",
                     resize:"vertical",outline:"none",lineHeight:1.6,
                   }}
                   onFocus={e => e.target.style.borderColor="#1a1a1a"}
@@ -445,23 +455,14 @@ export default function WatchQuiz() {
             )}
 
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <button
-                className="nav-btn"
-                onClick={() => setStep(s => s - 1)}
+              <button className="nav-btn" onClick={() => setStep(s => s - 1)}
                 disabled={step === 0}
-                style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}
-              >
+                style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}>
                 <ArrowLeft/> BACK
               </button>
-              <button
-                className="nav-btn"
-                onClick={handleNext}
+              <button className="nav-btn" onClick={handleNext}
                 disabled={!canAdvance()}
-                style={{
-                  background: canAdvance() ? "#1a1a1a" : "#ccc",
-                  color:"#fff",border:"none"
-                }}
-              >
+                style={{background: canAdvance() ? "#1a1a1a" : "#ccc",color:"#fff",border:"none"}}>
                 {isLast ? "FIND MY WATCHES" : "NEXT"} <ArrowRight/>
               </button>
             </div>
