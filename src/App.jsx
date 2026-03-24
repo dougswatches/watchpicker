@@ -96,58 +96,27 @@ function buildPrompt(answers) {
   const brands = (answers.brand_pref || []).join(", ") || "no preference";
   const type = answers.dress_vs_sport || "any";
   const existing = answers.existing_watches || "nothing specified";
-
   return `You are a world-class watch expert and horologist. A customer is looking for watch recommendations based on the following profile:
-
 - Budget: ${budget}
 - Use case: ${useCase}
 - Style preference: ${style}
 - Brand preferences: ${brands}
 - Watch type: ${type}
 - Existing watches: ${existing}
-
 Recommend exactly 3 watches that perfectly match this profile. For each watch provide:
-
 1. A specific model name (brand + model + reference if relevant)
 2. A typical market price (be accurate)
-3. A Chrono24 search URL using this format: https://www.chrono24.com/search/index.htm?query=WATCH+NAME+URL+ENCODED
-4. A compelling 2-3 sentence reason why this watch is perfect for this customer, referencing their specific answers
+3. A Chrono24 search URL: https://www.chrono24.com/search/index.htm?query=WATCH+NAME+URL+ENCODED
+4. A compelling 2-3 sentence reason why this watch is perfect for this customer
 5. 3 key specs (e.g. case size, movement, water resistance)
-
 Respond ONLY with a JSON array of 3 objects with these exact keys:
-- "name": string (e.g. "Omega Seamaster 300M")
-- "price": string (e.g. "~$4,500 new / ~$3,200 pre-owned")
-- "chrono24_url": string (full URL)
+- "name": string
+- "price": string
+- "chrono24_url": string
 - "reason": string
 - "specs": array of 3 strings
-
 Return raw JSON only. No markdown, no code blocks, no explanation. Just the raw JSON array starting with [ and ending with ].`;
 }
-
-const WatchIcon = () => (
-  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-    <rect x="9" y="1" width="10" height="4" rx="1" fill="currentColor" opacity="0.3"/>
-    <rect x="9" y="23" width="10" height="4" rx="1" fill="currentColor" opacity="0.3"/>
-    <circle cx="14" cy="14" r="9" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-    <circle cx="14" cy="14" r="1.5" fill="currentColor"/>
-    <line x1="14" y1="14" x2="14" y2="9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    <line x1="14" y1="14" x2="17.5" y2="15.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-  </svg>
-);
-
-const CheckIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <polyline points="2.5,7 5.5,10 11.5,4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-  </svg>
-);
-
-const ExternalLinkIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-    <path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-    <path d="M8 1h4v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
-    <line x1="12" y1="1" x2="6" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
-  </svg>
-);
 
 const ArrowRight = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -161,72 +130,82 @@ const ArrowLeft = () => (
   </svg>
 );
 
+const ExternalLinkIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 13 13" fill="none">
+    <path d="M5 2H2a1 1 0 00-1 1v8a1 1 0 001 1h8a1 1 0 001-1V8" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+    <path d="M8 1h4v4" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+    <line x1="12" y1="1" x2="6" y2="7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+    <polyline points="2.5,7 5.5,10 11.5,4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 const Loader = () => (
-  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"2rem",padding:"4rem 2rem"}}>
+  <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
     <div style={{
-      width:56,height:56,borderRadius:"50%",
-      border:"2px solid #d4a96a",
-      borderTopColor:"transparent",
-      animation:"spin 1s linear infinite"
+      width:40,height:40,borderRadius:"50%",
+      border:"2px solid #e8e8e8",
+      borderTopColor:"#1a1a1a",
+      animation:"spin 0.8s linear infinite"
     }}/>
-    <div>
-      <p style={{textAlign:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:"1.3rem",color:"var(--color-text-primary)",marginBottom:"0.4rem"}}>
-        Consulting the archives…
-      </p>
-      <p style={{textAlign:"center",fontSize:"0.875rem",color:"var(--color-text-secondary)"}}>
-        Our expert is handpicking three watches for you
-      </p>
+    <div style={{textAlign:"center"}}>
+      <p style={{fontSize:"1rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Finding your watches</p>
+      <p style={{fontSize:"0.85rem",color:"#888",margin:0}}>Our expert is reviewing your profile…</p>
     </div>
     <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </div>
 );
 
 function WatchCard({ watch, index }) {
-  const medals = ["I", "II", "III"];
   return (
     <div style={{
-      background:"var(--color-background-primary)",
-      border:"0.5px solid var(--color-border-tertiary)",
-      borderRadius:16,
+      background:"#fff",
+      border:"1px solid #e8e8e8",
+      borderRadius:4,
       overflow:"hidden",
-      animation:`fadeUp 0.5s ease both`,
-      animationDelay:`${index * 0.12}s`,
+      animation:`fadeUp 0.4s ease both`,
+      animationDelay:`${index * 0.1}s`,
     }}>
-      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}`}</style>
+      <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}`}</style>
       <div style={{
-        background:"linear-gradient(135deg,#1a1410 0%,#2d2218 100%)",
-        padding:"1.25rem 1.5rem",
-        display:"flex",alignItems:"center",gap:"1rem"
+        background:"#1a1a1a",
+        padding:"1rem 1.25rem",
+        display:"flex",alignItems:"center",gap:"0.75rem"
       }}>
-        <div style={{
-          width:36,height:36,borderRadius:"50%",
-          border:"1px solid rgba(212,169,106,0.4)",
-          display:"flex",alignItems:"center",justifyContent:"center",
-          fontFamily:"'Cormorant Garamond',serif",
-          fontSize:"1rem",color:"#d4a96a",flexShrink:0
-        }}>{medals[index]}</div>
+        <span style={{
+          fontSize:"0.7rem",
+          fontWeight:700,
+          letterSpacing:"0.12em",
+          color:"#888",
+          minWidth:20,
+        }}>0{index + 1}</span>
         <div style={{flex:1,minWidth:0}}>
-          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.25rem",fontWeight:600,color:"#f5e6cc",margin:0,lineHeight:1.2}}>
+          <p style={{fontSize:"1rem",fontWeight:700,color:"#fff",margin:0,lineHeight:1.3}}>
             {watch.name}
           </p>
-          <p style={{fontSize:"0.8rem",color:"#9a8060",margin:"0.15rem 0 0",letterSpacing:"0.05em"}}>
+          <p style={{fontSize:"0.8rem",color:"#999",margin:"0.2rem 0 0"}}>
             {watch.price}
           </p>
         </div>
       </div>
-      <div style={{padding:"1.25rem 1.5rem"}}>
-        <p style={{fontSize:"0.9rem",lineHeight:1.7,color:"var(--color-text-secondary)",margin:"0 0 1.25rem"}}>
+      <div style={{padding:"1.25rem"}}>
+        <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:"0 0 1rem"}}>
           {watch.reason}
         </p>
-        <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem",marginBottom:"1.25rem"}}>
+        <div style={{display:"flex",flexWrap:"wrap",gap:"0.35rem",marginBottom:"1.25rem"}}>
           {watch.specs.map((spec,i) => (
             <span key={i} style={{
               fontSize:"0.75rem",
-              padding:"0.25rem 0.6rem",
-              borderRadius:6,
-              background:"var(--color-background-secondary)",
-              color:"var(--color-text-secondary)",
-              border:"0.5px solid var(--color-border-tertiary)"
+              padding:"0.2rem 0.55rem",
+              borderRadius:2,
+              background:"#f5f5f5",
+              color:"#555",
+              border:"1px solid #e8e8e8",
+              fontWeight:500,
             }}>{spec}</span>
           ))}
         </div>
@@ -236,14 +215,14 @@ function WatchCard({ watch, index }) {
           rel="noopener noreferrer"
           style={{
             display:"inline-flex",alignItems:"center",gap:"0.4rem",
-            fontSize:"0.85rem",fontWeight:500,
-            color:"#c4892a",textDecoration:"none",
-            border:"0.5px solid rgba(196,137,42,0.35)",
-            borderRadius:8,padding:"0.5rem 0.9rem",
-            background:"rgba(196,137,42,0.06)"
+            fontSize:"0.8rem",fontWeight:700,
+            color:"#1a1a1a",textDecoration:"none",
+            letterSpacing:"0.04em",
+            borderBottom:"2px solid #1a1a1a",
+            paddingBottom:"1px",
           }}
         >
-          View on Chrono24 <ExternalLinkIcon/>
+          VIEW ON CHRONO24 <ExternalLinkIcon/>
         </a>
       </div>
     </div>
@@ -276,40 +255,34 @@ export default function WatchQuiz() {
   };
 
   const handleNext = () => {
-    if (isLast) {
-      submitQuiz();
-    } else {
-      setStep(s => s + 1);
-    }
+    if (isLast) submitQuiz();
+    else setStep(s => s + 1);
   };
 
   const submitQuiz = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const response = await fetch('/api/recommend', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: buildPrompt(answers) }),
-    });
-    const data = await response.json();
-    const text = data.text || '';
-    const clean = text
-      .replace(/```json/gi, '')
-      .replace(/```/g, '')
-      .trim();
-    const start = clean.indexOf('[');
-    const end = clean.lastIndexOf(']');
-    if (start === -1 || end === -1) throw new Error('No JSON array found');
-    const parsed = JSON.parse(clean.slice(start, end + 1));
-    setResults(parsed);
-  } catch (e) {
-    console.error('Quiz error:', e.message);
-    setError('Something went wrong fetching recommendations. Please try again.');
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/recommend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: buildPrompt(answers) }),
+      });
+      const data = await response.json();
+      const text = data.text || '';
+      const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const start = clean.indexOf('[');
+      const end = clean.lastIndexOf(']');
+      if (start === -1 || end === -1) throw new Error('No JSON array found');
+      const parsed = JSON.parse(clean.slice(start, end + 1));
+      setResults(parsed);
+    } catch (e) {
+      console.error('Quiz error:', e.message);
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const reset = () => {
     setStep(0);
@@ -319,82 +292,86 @@ export default function WatchQuiz() {
     setLoading(false);
   };
 
-  const gold = "#c4892a";
-  const goldLight = "rgba(196,137,42,0.15)";
+  const accent = "#1a1a1a";
+  const red = "#c0392b";
 
   return (
     <div style={{
       minHeight:"100vh",
-      background:"var(--color-background-tertiary)",
-      fontFamily:"'DM Sans',system-ui,sans-serif",
+      background:"#f9f9f9",
+      fontFamily:"'Albert Sans', system-ui, sans-serif",
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { margin: 0; }
+        body { margin: 0; background: #f9f9f9; }
         .opt-btn {
           display: flex; align-items: center; gap: 0.75rem;
-          width: 100%; padding: 0.8rem 1rem;
-          background: var(--color-background-primary);
-          border: 0.5px solid var(--color-border-tertiary);
-          border-radius: 10px; cursor: pointer;
-          font-size: 0.9rem; font-family: inherit;
-          color: var(--color-text-primary);
-          text-align: left; transition: border-color 0.15s, background 0.15s;
+          width: 100%; padding: 0.75rem 1rem;
+          background: #fff;
+          border: 1px solid #e0e0e0;
+          border-radius: 3px; cursor: pointer;
+          font-size: 0.9rem; font-family: 'Albert Sans', system-ui, sans-serif;
+          color: #1a1a1a; font-weight: 500;
+          text-align: left; transition: border-color 0.12s, background 0.12s;
         }
-        .opt-btn:hover { border-color: ${gold}; }
-        .opt-btn.selected { border-color: ${gold}; background: ${goldLight}; }
+        .opt-btn:hover { border-color: #1a1a1a; background: #fafafa; }
+        .opt-btn.selected { border-color: #1a1a1a; background: #fff; }
         .nav-btn {
           display: inline-flex; align-items: center; gap: 0.5rem;
-          padding: 0.65rem 1.25rem;
-          border-radius: 8px; font-size: 0.875rem; font-weight: 500;
-          font-family: inherit; cursor: pointer; transition: opacity 0.15s;
+          padding: 0.6rem 1.25rem;
+          border-radius: 3px; font-size: 0.8rem; font-weight: 700;
+          font-family: 'Albert Sans', system-ui, sans-serif;
+          cursor: pointer; transition: opacity 0.12s;
+          letter-spacing: 0.05em;
         }
-        .nav-btn:hover { opacity: 0.8; }
-        .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .nav-btn:hover { opacity: 0.75; }
+        .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
       `}</style>
 
       <header style={{
-        borderBottom:"0.5px solid var(--color-border-tertiary)",
-        background:"var(--color-background-primary)",
-        padding:"1rem 1.5rem",
-        display:"flex",alignItems:"center",gap:"0.75rem"
+        background:"#1a1a1a",
+        padding:"0.9rem 1.5rem",
+        display:"flex",alignItems:"center",justifyContent:"space-between"
       }}>
-        <div style={{color:gold}}><WatchIcon/></div>
         <div>
-          <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.15rem",fontWeight:600,color:"var(--color-text-primary)",lineHeight:1}}>
-            Horologist
-          </p>
-          <p style={{fontSize:"0.7rem",color:"var(--color-text-secondary)",letterSpacing:"0.08em",marginTop:2}}>
+          <span style={{fontSize:"0.95rem",fontWeight:700,color:"#fff",letterSpacing:"0.02em"}}>
+            Doug's Watches
+          </span>
+          <span style={{
+            marginLeft:"0.75rem",fontSize:"0.7rem",fontWeight:600,
+            color:"#888",letterSpacing:"0.1em",
+          }}>
             WATCH FINDER
-          </p>
+          </span>
         </div>
+        <a href="https://dougswatches.co.uk" style={{fontSize:"0.75rem",color:"#888",textDecoration:"none",letterSpacing:"0.05em"}}>
+          ← BACK TO SITE
+        </a>
       </header>
 
-      <main style={{maxWidth:560,margin:"0 auto",padding:"2rem 1rem 4rem"}}>
+      <main style={{maxWidth:600,margin:"0 auto",padding:"2.5rem 1.25rem 5rem"}}>
 
         {results && !loading && (
           <div>
-            <div style={{textAlign:"center",marginBottom:"2rem"}}>
-              <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"2rem",fontWeight:600,color:"var(--color-text-primary)",lineHeight:1.2}}>
-                Your recommendations
+            <div style={{marginBottom:"2rem",paddingBottom:"1.5rem",borderBottom:"2px solid #1a1a1a"}}>
+              <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>
+                YOUR RESULTS
               </p>
-              <p style={{fontSize:"0.875rem",color:"var(--color-text-secondary)",marginTop:"0.5rem"}}>
-                Three watches, handpicked for you.
-              </p>
+              <h1 style={{fontSize:"1.6rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>
+                Three watches picked for you
+              </h1>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
               {results.map((watch, i) => <WatchCard key={i} watch={watch} index={i}/>)}
             </div>
-            <div style={{textAlign:"center"}}>
-              <button
-                className="nav-btn"
-                onClick={reset}
-                style={{background:"var(--color-background-primary)",border:`0.5px solid var(--color-border-secondary)`,color:"var(--color-text-secondary)"}}
-              >
-                <ArrowLeft/> Start over
-              </button>
-            </div>
+            <button
+              className="nav-btn"
+              onClick={reset}
+              style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}
+            >
+              <ArrowLeft/> START OVER
+            </button>
           </div>
         )}
 
@@ -402,39 +379,32 @@ export default function WatchQuiz() {
 
         {error && !loading && (
           <div style={{textAlign:"center",padding:"3rem 1rem"}}>
-            <p style={{color:"var(--color-text-danger)",marginBottom:"1rem"}}>{error}</p>
-            <button className="nav-btn" onClick={submitQuiz} style={{background:gold,color:"#fff",border:"none"}}>
-              Retry
+            <p style={{color:red,marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
+            <button className="nav-btn" onClick={submitQuiz}
+              style={{background:"#1a1a1a",color:"#fff",border:"none"}}>
+              TRY AGAIN
             </button>
           </div>
         )}
 
         {!results && !loading && !error && (
           <div>
-            <div style={{marginBottom:"2.5rem"}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"0.6rem"}}>
-                <span style={{fontSize:"0.75rem",color:"var(--color-text-secondary)",letterSpacing:"0.06em"}}>
-                  QUESTION {step+1} OF {questions.length}
-                </span>
-                <span style={{fontSize:"0.75rem",color:gold,fontWeight:500}}>
-                  {Math.round(((step) / questions.length) * 100)}%
-                </span>
-              </div>
-              <div style={{height:2,background:"var(--color-border-tertiary)",borderRadius:2}}>
+            <div style={{marginBottom:"2rem",paddingBottom:"1.5rem",borderBottom:"2px solid #1a1a1a"}}>
+              <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>
+                QUESTION {step + 1} OF {questions.length}
+              </p>
+              <div style={{height:2,background:"#e8e8e8",borderRadius:0,marginBottom:"1.25rem"}}>
                 <div style={{
-                  height:"100%",background:gold,borderRadius:2,
-                  width:`${((step)/questions.length)*100}%`,
+                  height:"100%",background:"#1a1a1a",
+                  width:`${((step) / questions.length) * 100}%`,
                   transition:"width 0.3s ease"
                 }}/>
               </div>
-            </div>
-
-            <div style={{marginBottom:"2rem"}}>
-              <h1 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:"1.9rem",fontWeight:600,color:"var(--color-text-primary)",lineHeight:1.2,marginBottom:"0.4rem"}}>
+              <h1 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.35rem"}}>
                 {q.label}
               </h1>
               {q.subtitle && (
-                <p style={{fontSize:"0.875rem",color:"var(--color-text-secondary)"}}>
+                <p style={{fontSize:"0.875rem",color:"#888",fontWeight:400}}>
                   {q.subtitle}
                 </p>
               )}
@@ -447,15 +417,15 @@ export default function WatchQuiz() {
                   return (
                     <button
                       key={opt.value}
-                      className={`opt-btn${sel?" selected":""}`}
+                      className={`opt-btn${sel ? " selected" : ""}`}
                       onClick={() => setAnswers(prev => ({...prev,[q.id]:opt.value}))}
                     >
                       <div style={{
-                        width:20,height:20,borderRadius:"50%",flexShrink:0,
-                        border:`1.5px solid ${sel ? gold : "var(--color-border-secondary)"}`,
-                        background: sel ? gold : "transparent",
+                        width:18,height:18,borderRadius:"50%",flexShrink:0,
+                        border:`2px solid ${sel ? "#1a1a1a" : "#ccc"}`,
+                        background: sel ? "#1a1a1a" : "#fff",
                         display:"flex",alignItems:"center",justifyContent:"center",
-                        color:"#fff",transition:"all 0.15s"
+                        color:"#fff",transition:"all 0.12s"
                       }}>
                         {sel && <CheckIcon/>}
                       </div>
@@ -473,15 +443,23 @@ export default function WatchQuiz() {
                   return (
                     <button
                       key={opt.value}
-                      className={`opt-btn${sel?" selected":""}`}
-                      onClick={() => toggleMulti(q.id, opt.value)}
+                      className={`opt-btn${sel ? " selected" : ""}`}
+                      onClick={() => {
+                        const current = answers[q.id] || [];
+                        setAnswers(prev => ({
+                          ...prev,
+                          [q.id]: current.includes(opt.value)
+                            ? current.filter(v => v !== opt.value)
+                            : [...current, opt.value],
+                        }));
+                      }}
                     >
                       <div style={{
-                        width:18,height:18,borderRadius:4,flexShrink:0,
-                        border:`1.5px solid ${sel ? gold : "var(--color-border-secondary)"}`,
-                        background: sel ? gold : "transparent",
+                        width:16,height:16,borderRadius:2,flexShrink:0,
+                        border:`2px solid ${sel ? "#1a1a1a" : "#ccc"}`,
+                        background: sel ? "#1a1a1a" : "#fff",
                         display:"flex",alignItems:"center",justifyContent:"center",
-                        color:"#fff",transition:"all 0.15s"
+                        color:"#fff",transition:"all 0.12s"
                       }}>
                         {sel && <CheckIcon/>}
                       </div>
@@ -501,14 +479,18 @@ export default function WatchQuiz() {
                   onChange={e => setAnswers(prev => ({...prev,[q.id]:e.target.value}))}
                   style={{
                     width:"100%",padding:"0.85rem 1rem",
-                    border:"0.5px solid var(--color-border-secondary)",
-                    borderRadius:10,
-                    background:"var(--color-background-primary)",
-                    color:"var(--color-text-primary)",
-                    fontSize:"0.9rem",fontFamily:"inherit",
+                    border:"1px solid #e0e0e0",
+                    borderRadius:3,
+                    background:"#fff",
+                    color:"#1a1a1a",
+                    fontSize:"0.9rem",
+                    fontFamily:"'Albert Sans', system-ui, sans-serif",
                     resize:"vertical",outline:"none",
-                    lineHeight:1.6
+                    lineHeight:1.6,
+                    transition:"border-color 0.12s"
                   }}
+                  onFocus={e => e.target.style.borderColor="#1a1a1a"}
+                  onBlur={e => e.target.style.borderColor="#e0e0e0"}
                 />
               </div>
             )}
@@ -518,17 +500,20 @@ export default function WatchQuiz() {
                 className="nav-btn"
                 onClick={() => setStep(s => s - 1)}
                 disabled={step === 0}
-                style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-secondary)",color:"var(--color-text-secondary)"}}
+                style={{background:"#f0f0f0",border:"1px solid #ddd",color:"#555"}}
               >
-                <ArrowLeft/> Back
+                <ArrowLeft/> BACK
               </button>
               <button
                 className="nav-btn"
                 onClick={handleNext}
                 disabled={!canAdvance()}
-                style={{background:gold,color:"#fff",border:"none",opacity:canAdvance()?1:0.4}}
+                style={{
+                  background: canAdvance() ? "#1a1a1a" : "#ccc",
+                  color:"#fff",border:"none"
+                }}
               >
-                {isLast ? "Find my watches" : "Next"} <ArrowRight/>
+                {isLast ? "FIND MY WATCHES" : "NEXT"} <ArrowRight/>
               </button>
             </div>
           </div>
