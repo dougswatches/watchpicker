@@ -96,24 +96,42 @@ function buildPrompt(answers) {
   const brands = (answers.brand_pref || []).join(", ") || "no preference";
   const type = answers.dress_vs_sport || "any";
   const existing = answers.existing_watches || "nothing specified";
-  return `You are a world-class watch expert and horologist. A customer is looking for watch recommendations based on the following profile:
+
+  return `You are a world-class watch expert. Recommend exactly 3 watches for this customer:
 - Budget: ${budget}
 - Use case: ${useCase}
-- Style preference: ${style}
+- Style: ${style}
 - Brand preferences: ${brands}
 - Watch type: ${type}
-- Existing watches: ${existing}
+- Already owns: ${existing}
 
-Recommend exactly 3 watches that perfectly match this profile.
+For each watch, also select ONLY the platforms where this specific watch is genuinely sold or commonly listed. Be accurate — do not include platforms that would not realistically stock this watch.
 
-For each watch return a JSON object with these exact keys:
-- "name": string — specific model name e.g. "Seiko Prospex SPB143"
-- "price": string — accurate market price e.g. "~£320 new / ~£250 pre-owned"
-- "availability": string — one of exactly: "new", "preowned", or "both"
-- "reason": string — 2-3 sentences explaining why this watch suits this customer specifically
-- "specs": array of exactly 3 strings e.g. ["40mm case", "Automatic movement", "200m water resistance"]
+Available platform keys and what they stock:
+- "chrono24" — pre-owned and grey market, all brands
+- "watchfinder" — pre-owned luxury (Rolex, Omega, TAG, Breitling, IWC etc)
+- "watchenclave" — pre-owned mid to high-end
+- "zeitauktion" — pre-owned European auction, mid to high-end
+- "ebay" — pre-owned all price points, vintage, grey market
+- "amazon" — new watches, mainstream brands (Seiko, Citizen, Casio, Orient, Tissot, Hamilton etc)
+- "goldsmiths" — new, authorised dealer (mid to luxury: TAG, Longines, Omega, Breitling, Tudor)
+- "beaverbrooks" — new, authorised dealer (mid range: Seiko, Citizen, TAG, Tissot, Frederique Constant)
+- "chisholmhunter" — new, authorised dealer (mid to luxury, Scotland-based)
+- "thbaker" — new, authorised dealer (mid range UK)
+- "houseofwatches" — new and pre-owned, wide range
+- "cwsellors" — new, mid range UK (Seiko, Citizen, Tissot, Hamilton, Rotary)
+- "fhinds" — new, budget to mid range UK (Seiko, Citizen, Casio, Rotary, Lorus)
+- "citizen" — new Citizen brand watches only
 
-Return ONLY a raw JSON array of 3 objects. No markdown, no code blocks, no explanation. Start with [ and end with ].`;
+Return ONLY a raw JSON array of 3 objects with these exact keys:
+- "name": string — specific model e.g. "Seiko Prospex SPB143"
+- "price": string — e.g. "~£320 new / ~£250 pre-owned"
+- "availability": string — one of: "new", "preowned", "both"
+- "reason": string — 2-3 sentences tailored to this customer
+- "specs": array of exactly 3 strings
+- "platforms": array of platform key strings from the list above — only include platforms that genuinely stock this watch
+
+No markdown, no code blocks. Start with [ and end with ].`;
 }
 
 const ArrowRight = () => (
@@ -182,9 +200,9 @@ function WatchCard({ watch, index }) {
         {watch.availability && (
           <span style={{
             fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",
-            padding:"0.2rem 0.5rem",borderRadius:2,
-            background: watch.availability === 'new' ? "#2d6a4f" : watch.availability === 'preowned' ? "#1d3557" : "#555",
-            color:"#fff",whiteSpace:"nowrap",flexShrink:0,
+            padding:"0.2rem 0.5rem",borderRadius:2,flexShrink:0,
+            background: watch.availability === 'new' ? "#2d6a4f" : watch.availability === 'preowned' ? "#1d3557" : "#444",
+            color:"#fff",whiteSpace:"nowrap",
           }}>
             {watch.availability === 'new' ? 'NEW' : watch.availability === 'preowned' ? 'PRE-OWNED' : 'NEW & PRE-OWNED'}
           </span>
@@ -204,48 +222,41 @@ function WatchCard({ watch, index }) {
           ))}
         </div>
 
-        <div style={{borderTop:"1px solid #f0f0f0",paddingTop:"1rem"}}>
-          <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>
-            WHERE TO BUY
-          </p>
-          <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
-            {visibleLinks.map((link, i) => (
-              <a
-                key={i}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  display:"inline-flex",alignItems:"center",gap:"0.3rem",
-                  fontSize:"0.75rem",fontWeight:600,color:"#1a1a1a",
-                  textDecoration:"none",letterSpacing:"0.03em",
-                  padding:"0.35rem 0.65rem",
-                  border:"1px solid #e0e0e0",borderRadius:3,
-                  background:"#fafafa",
-                  transition:"border-color 0.12s,background 0.12s",
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
-              >
-                {link.label} <ExternalIcon/>
-              </a>
-            ))}
-            {links.length > 3 && !showAll && (
-              <button
-                onClick={() => setShowAll(true)}
-                style={{
+        {links.length > 0 && (
+          <div style={{borderTop:"1px solid #f0f0f0",paddingTop:"1rem"}}>
+            <p style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>
+              WHERE TO BUY
+            </p>
+            <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
+              {visibleLinks.map((link, i) => (
+                <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display:"inline-flex",alignItems:"center",gap:"0.3rem",
+                    fontSize:"0.75rem",fontWeight:600,color:"#1a1a1a",
+                    textDecoration:"none",letterSpacing:"0.03em",
+                    padding:"0.35rem 0.65rem",
+                    border:"1px solid #e0e0e0",borderRadius:3,
+                    background:"#fafafa",transition:"border-color 0.12s,background 0.12s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
+                >
+                  {link.label} <ExternalIcon/>
+                </a>
+              ))}
+              {links.length > 3 && !showAll && (
+                <button onClick={() => setShowAll(true)} style={{
                   fontSize:"0.75rem",fontWeight:600,color:"#888",
                   padding:"0.35rem 0.65rem",border:"1px solid #e0e0e0",
                   borderRadius:3,background:"#fafafa",cursor:"pointer",
-                  fontFamily:"'Albert Sans',system-ui,sans-serif",
-                  letterSpacing:"0.03em",
-                }}
-              >
-                +{links.length - 3} more
-              </button>
-            )}
+                  fontFamily:"'Albert Sans',system-ui,sans-serif",letterSpacing:"0.03em",
+                }}>
+                  +{links.length - 3} more
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
