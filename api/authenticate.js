@@ -80,16 +80,22 @@ export default async function handler(req, res) {
 
   try {
     const prompt = buildAuthPrompt({ brand, model, reference, details, seller_claims });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
       }),
     });
+
+    clearTimeout(timeout);
 
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: 'Gemini API error', details: data });
@@ -108,6 +114,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ report });
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Request timed out. Please try again.' });
+    }
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }
