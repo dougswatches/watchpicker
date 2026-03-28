@@ -246,7 +246,7 @@ function ComingSoon({ toolId }) {
         </div>
       </div>
  
-      <div style={{
+      <div className="mobile-flex-wrap" style={{
         background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
         padding:"1.25rem 1.5rem",display:"flex",alignItems:"center",justifyContent:"space-between",gap:"1rem"
       }}>
@@ -600,10 +600,10 @@ function ValuationResult({ result, onReset, formatGBP }) {
           }}>{result.verdict}</span>
         </div>
         <div style={{display:"flex",alignItems:"baseline",gap:"0.5rem",marginBottom:"0.75rem"}}>
-          <span style={{fontSize:"2rem",fontWeight:700,color:"#fff",lineHeight:1}}>{formatGBP(result.value_mid)}</span>
+          <span className="mobile-value-big" style={{fontSize:"2rem",fontWeight:700,color:"#fff",lineHeight:1}}>{formatGBP(result.value_mid)}</span>
           <span style={{fontSize:"0.8rem",color:"#888",fontWeight:500}}>mid estimate</span>
         </div>
-        <div style={{display:"flex",gap:"1.5rem",marginBottom:"1rem"}}>
+        <div className="mobile-flex-wrap" style={{display:"flex",gap:"1.5rem",marginBottom:"1rem"}}>
           <div>
             <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#555",marginBottom:"0.15rem"}}>LOW</p>
             <p style={{fontSize:"1rem",fontWeight:600,color:"#999",margin:0}}>{formatGBP(result.value_low)}</p>
@@ -620,7 +620,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           )}
         </div>
         {/* Market Trend */}
-        <div style={{
+        <div className="mobile-flex-wrap" style={{
           borderTop:"1px solid rgba(255,255,255,0.08)",paddingTop:"0.85rem",
           display:"flex",alignItems:"center",gap:"0.5rem",
         }}>
@@ -650,7 +650,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
       </div>
 
       {/* Condition + Confidence row */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1rem"}}>
+      <div className="mobile-stack" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1rem"}}>
         {/* Condition */}
         <div style={{
           background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
@@ -899,7 +899,7 @@ function ShouldIBuyTool() {
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
             WHERE DID YOU FIND IT? <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional)</span>
           </label>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.4rem"}}>
+          <div className="mobile-stack-narrow" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.4rem"}}>
             {PLATFORM_SOURCE_OPTIONS.map(opt => {
               const sel = formData.platform_source === opt.value;
               return (
@@ -1041,7 +1041,7 @@ function ShouldIBuyResult({ result, onReset }) {
           }}>{priceLabels[result.price_assessment] || "Unknown"}</span>
         </div>
         {(result.market_value_low || result.market_value_high) && (
-          <div style={{display:"flex",gap:"1.5rem",marginBottom:"0.75rem"}}>
+          <div className="mobile-flex-wrap" style={{display:"flex",gap:"1.5rem",marginBottom:"0.75rem"}}>
             {result.market_value_low && (
               <div>
                 <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#aaa",marginBottom:"0.1rem"}}>MARKET LOW</p>
@@ -1512,7 +1512,7 @@ function AuthenticationResult({ result, onReset }) {
       </div>
 
       {/* Counterfeit Risk + Confidence */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1rem"}}>
+      <div className="mobile-stack" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1rem"}}>
         <div style={{
           background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
           animation:"fadeUp 0.4s ease both",animationDelay:"0.05s",
@@ -1764,7 +1764,7 @@ function CollectionTool() {
             onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
           />
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem"}}>
+        <div className="mobile-stack" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem"}}>
           <div>
             <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>PURCHASE PRICE <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(£)</span></label>
             <input type="number" placeholder="e.g. 5200" value={formData.purchase_price}
@@ -1855,10 +1855,10 @@ function CollectionTool() {
           }}>
             <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#666",marginBottom:"1rem"}}>ESTIMATED COLLECTION VALUE</p>
             <div style={{display:"flex",alignItems:"baseline",gap:"0.5rem",marginBottom:"0.75rem"}}>
-              <span style={{fontSize:"2rem",fontWeight:700,color:"#fff",lineHeight:1}}>{formatGBP(analysis.total_value_mid)}</span>
+              <span className="mobile-value-big" style={{fontSize:"2rem",fontWeight:700,color:"#fff",lineHeight:1}}>{formatGBP(analysis.total_value_mid)}</span>
               <span style={{fontSize:"0.8rem",color:"#888",fontWeight:500}}>mid estimate</span>
             </div>
-            <div style={{display:"flex",gap:"1.5rem"}}>
+            <div className="mobile-flex-wrap" style={{display:"flex",gap:"1.5rem"}}>
               <div>
                 <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#555",marginBottom:"0.15rem"}}>LOW</p>
                 <p style={{fontSize:"1rem",fontWeight:600,color:"#999",margin:0}}>{formatGBP(analysis.total_value_low)}</p>
@@ -2138,7 +2138,7 @@ function WatchFinder() {
       )}
  
       {q.type === "multi" && (
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.5rem",marginBottom:"2rem"}}>
+        <div className="mobile-stack-narrow" style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.5rem",marginBottom:"2rem"}}>
           {q.options.map(opt => {
             const sel = (answers[q.id]||[]).includes(opt.value);
             return (
@@ -2228,10 +2228,23 @@ export default function App() {
         .nav-item.active { background: rgba(255,255,255,0.1); color: #fff; }
         .nav-item.disabled { opacity: 0.45; cursor: default; }
         .nav-item.disabled:hover { background: transparent; color: #888; }
+        input, textarea { max-width: 100%; }
         @media (max-width: 768px) {
           .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; position: fixed !important; z-index: 100; height: 100vh !important; }
           .sidebar.open { transform: translateX(0); }
           .overlay { display: block !important; }
+          .mobile-menu-btn { display: flex !important; }
+          .mobile-stack { grid-template-columns: 1fr !important; }
+          .mobile-header { padding: 0 1rem !important; }
+          .mobile-header-title { font-size: 0.85rem !important; }
+          .mobile-content { padding: 1rem !important; }
+          .mobile-value-big { font-size: 1.5rem !important; }
+          .mobile-flex-wrap { flex-wrap: wrap !important; }
+          .mobile-hide { display: none !important; }
+        }
+        @media (max-width: 420px) {
+          .mobile-stack-narrow { grid-template-columns: 1fr !important; }
+          .opt-btn { font-size: 0.82rem; padding: 0.65rem 0.85rem; }
         }
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
         @keyframes spin{to{transform:rotate(360deg)}}
@@ -2304,7 +2317,7 @@ export default function App() {
       {/* Main */}
       <div style={{flex:1,display:"flex",flexDirection:"column",minWidth:0}}>
         {/* Top bar */}
-        <header style={{
+        <header className="mobile-header" style={{
           background:"#fff",borderBottom:"1px solid #e8e8e8",
           padding:"0 1.5rem",height:52,
           display:"flex",alignItems:"center",justifyContent:"space-between",
@@ -2345,11 +2358,6 @@ export default function App() {
  
         {/* Page content */}
         <main style={{flex:1,overflowY:"auto",padding:"0"}}>
-          <style>{`
-            @media (max-width: 768px) {
-              .mobile-menu-btn { display: flex !important; }
-            }
-          `}</style>
           {activePage === "finder" && <WatchFinder/>}
           {activePage === "valuation" && <ValuationTool/>}
           {activePage === "shouldibuy" && <ShouldIBuyTool/>}
