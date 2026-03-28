@@ -126,7 +126,7 @@ const NAV_ITEMS = [
   { id: "valuation",      label: "Valuation Tool",      icon: "◈", badge: "FREE",    live: true  },
   { id: "shouldibuy",     label: "Should I Buy This?",  icon: "◇", badge: "FREE",    live: true  },
   { id: "authentication", label: "Authentication",       icon: "◉", badge: "FREE",    live: true  },
-  { id: "collection",     label: "My Collection",        icon: "▣", badge: "PRO",     live: false },
+  { id: "collection",     label: "My Collection",        icon: "▣", badge: "FREE",    live: true  },
 ];
  
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -1633,6 +1633,413 @@ function AuthenticationResult({ result, onReset }) {
   );
 }
 
+// ─── My Collection Tool ──────────────────────────────────────────────────────
+
+const COLLECTION_CONDITIONS = [
+  { value: "mint", label: "Mint" },
+  { value: "excellent", label: "Excellent" },
+  { value: "very_good", label: "Very Good" },
+  { value: "good", label: "Good" },
+  { value: "fair", label: "Fair" },
+];
+
+function CollectionTool() {
+  const [watches, setWatches] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({ brand: "", model: "", reference: "", purchase_price: "", purchase_date: "", condition: "excellent" });
+  const [loading, setLoading] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [error, setError] = useState(null);
+
+  const canAdd = formData.brand.trim() && formData.model.trim();
+
+  const addWatch = () => {
+    if (!canAdd) return;
+    setWatches(prev => [...prev, { ...formData, id: Date.now() }]);
+    setFormData({ brand: "", model: "", reference: "", purchase_price: "", purchase_date: "", condition: "excellent" });
+    setShowForm(false);
+    setAnalysis(null);
+  };
+
+  const removeWatch = (id) => {
+    setWatches(prev => prev.filter(w => w.id !== id));
+    setAnalysis(null);
+  };
+
+  const analyseCollection = async () => {
+    setLoading(true); setError(null);
+    try {
+      const response = await fetch('/api/collection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ watches }),
+      });
+      const data = await response.json();
+      if (data.analysis) setAnalysis(data.analysis);
+      else throw new Error(data.error || 'No analysis returned');
+    } catch (e) {
+      setError('Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatGBP = (n) => {
+    if (!n && n !== 0) return "—";
+    return "£" + Number(n).toLocaleString("en-GB");
+  };
+
+  const trendIcon = (t) => t === "rising" ? "↗" : t === "falling" ? "↘" : "→";
+  const trendColor = (t) => t === "rising" ? "#2d6a4f" : t === "falling" ? "#c0392b" : "#888";
+  const sellColors = { sell_now: "#c0392b", hold: "#e9c46a", strong_hold: "#2d6a4f" };
+  const sellLabels = { sell_now: "Sell Now", hold: "Hold", strong_hold: "Strong Hold" };
+
+  // ─── Empty State ───
+  if (watches.length === 0 && !showForm) return (
+    <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
+      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>MY COLLECTION</p>
+        <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>
+          Track your watches
+        </h2>
+        <p style={{fontSize:"0.85rem",color:"#888"}}>
+          Add your watches and get AI-powered valuations, market trends, and personalised next-purchase recommendations.
+        </p>
+      </div>
+      <div style={{
+        background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"3rem 2rem",textAlign:"center",marginBottom:"1.5rem",
+      }}>
+        <p style={{fontSize:"2rem",marginBottom:"0.75rem"}}>▣</p>
+        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.35rem"}}>No watches yet</p>
+        <p style={{fontSize:"0.82rem",color:"#888",margin:"0 0 1.25rem"}}>Add your first watch to get started.</p>
+        <button onClick={() => setShowForm(true)} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",
+          padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",background:"#1a1a1a",color:"#fff",border:"none",cursor:"pointer",
+          fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}>
+          ADD A WATCH <ArrowRight/>
+        </button>
+      </div>
+      <div style={{
+        background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"1rem 1.25rem",
+      }}>
+        <p style={{fontSize:"0.75rem",lineHeight:1.6,color:"#888",margin:0}}>
+          This is a session-based preview. Your collection will not be saved when you close the page. Account-based persistence with full portfolio tracking is coming soon.
+        </p>
+      </div>
+    </div>
+  );
+
+  // ─── Add Watch Form ───
+  if (showForm) return (
+    <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
+      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>ADD TO COLLECTION</p>
+        <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>Add a watch</h2>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>BRAND *</label>
+          <input type="text" placeholder="e.g. Rolex, Omega, Seiko…" value={formData.brand}
+            onChange={e => setFormData(p => ({...p, brand: e.target.value}))}
+            style={{width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none"}}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>MODEL *</label>
+          <input type="text" placeholder="e.g. Submariner Date, Speedmaster Professional…" value={formData.model}
+            onChange={e => setFormData(p => ({...p, model: e.target.value}))}
+            style={{width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none"}}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>REFERENCE <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional)</span></label>
+          <input type="text" placeholder="e.g. 126610LN" value={formData.reference}
+            onChange={e => setFormData(p => ({...p, reference: e.target.value}))}
+            style={{width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none"}}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem"}}>
+          <div>
+            <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>PURCHASE PRICE <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(£)</span></label>
+            <input type="number" placeholder="e.g. 5200" value={formData.purchase_price}
+              onChange={e => setFormData(p => ({...p, purchase_price: e.target.value}))}
+              style={{width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none"}}
+              onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+            />
+          </div>
+          <div>
+            <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>PURCHASE DATE</label>
+            <input type="month" value={formData.purchase_date}
+              onChange={e => setFormData(p => ({...p, purchase_date: e.target.value}))}
+              style={{width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none"}}
+              onFocus={e=>e.target.style.borderColor="#1a1a1a"} onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+            />
+          </div>
+        </div>
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>CONDITION</label>
+          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
+            {COLLECTION_CONDITIONS.map(opt => {
+              const sel = formData.condition === opt.value;
+              return (
+                <button key={opt.value} onClick={() => setFormData(p => ({...p, condition: opt.value}))}
+                  style={{
+                    padding:"0.45rem 0.85rem",borderRadius:3,fontSize:"0.8rem",fontWeight:600,
+                    border:`1px solid ${sel?"#1a1a1a":"#e0e0e0"}`,
+                    background:sel?"#1a1a1a":"#fff",color:sel?"#fff":"#555",
+                    cursor:"pointer",fontFamily:"'Albert Sans',system-ui,sans-serif",
+                    transition:"all 0.12s",
+                  }}>
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{display:"flex",gap:"0.75rem"}}>
+        <button onClick={() => setShowForm(false)} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",
+          padding:"0.7rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",background:"#f0f0f0",color:"#555",border:"1px solid #ddd",
+          cursor:"pointer",fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}><ArrowLeft/> CANCEL</button>
+        <button onClick={addWatch} disabled={!canAdd} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",flex:1,justifyContent:"center",
+          padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",background:canAdd?"#1a1a1a":"#ccc",color:"#fff",border:"none",
+          cursor:"pointer",fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}>ADD TO COLLECTION <ArrowRight/></button>
+      </div>
+    </div>
+  );
+
+  // ─── Loading ───
+  if (loading) return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
+      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
+      <div style={{textAlign:"center"}}>
+        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Analysing your collection</p>
+        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Valuing {watches.length} watch{watches.length !== 1 ? "es" : ""} across all markets…</p>
+      </div>
+    </div>
+  );
+
+  // ─── Collection View (with optional analysis) ───
+  return (
+    <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
+      {/* Header */}
+      <div style={{marginBottom:"1.5rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div>
+            <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>MY COLLECTION</p>
+            <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>
+              {watches.length} watch{watches.length !== 1 ? "es" : ""}
+            </h2>
+          </div>
+          <button onClick={() => setShowForm(true)} style={{
+            display:"inline-flex",alignItems:"center",gap:"0.4rem",
+            padding:"0.5rem 1rem",borderRadius:3,fontSize:"0.75rem",fontWeight:700,
+            letterSpacing:"0.05em",background:"#1a1a1a",color:"#fff",border:"none",
+            cursor:"pointer",fontFamily:"'Albert Sans',system-ui,sans-serif",
+          }}>+ ADD</button>
+        </div>
+      </div>
+
+      {/* Analysis Summary (if available) */}
+      {analysis && (
+        <>
+          {/* Total Value Card */}
+          <div style={{
+            background:"#1a1a1a",borderRadius:4,padding:"1.5rem",marginBottom:"1rem",
+            animation:"fadeUp 0.4s ease both",
+          }}>
+            <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#666",marginBottom:"1rem"}}>ESTIMATED COLLECTION VALUE</p>
+            <div style={{display:"flex",alignItems:"baseline",gap:"0.5rem",marginBottom:"0.75rem"}}>
+              <span style={{fontSize:"2rem",fontWeight:700,color:"#fff",lineHeight:1}}>{formatGBP(analysis.total_value_mid)}</span>
+              <span style={{fontSize:"0.8rem",color:"#888",fontWeight:500}}>mid estimate</span>
+            </div>
+            <div style={{display:"flex",gap:"1.5rem"}}>
+              <div>
+                <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#555",marginBottom:"0.15rem"}}>LOW</p>
+                <p style={{fontSize:"1rem",fontWeight:600,color:"#999",margin:0}}>{formatGBP(analysis.total_value_low)}</p>
+              </div>
+              <div>
+                <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#555",marginBottom:"0.15rem"}}>HIGH</p>
+                <p style={{fontSize:"1rem",fontWeight:600,color:"#999",margin:0}}>{formatGBP(analysis.total_value_high)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Collection Insight */}
+          <div style={{
+            background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+            marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.05s",
+          }}>
+            <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>COLLECTION INSIGHT</p>
+            <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:0}}>{analysis.collection_insight}</p>
+          </div>
+        </>
+      )}
+
+      {/* Watch List */}
+      <div style={{display:"flex",flexDirection:"column",gap:"0.75rem",marginBottom:"1.5rem"}}>
+        {watches.map((w, i) => {
+          const av = analysis?.watches?.[i];
+          return (
+            <div key={w.id} style={{
+              background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
+              overflow:"hidden",animation:"fadeUp 0.4s ease both",
+              animationDelay:`${i * 0.05}s`,
+            }}>
+              <div style={{padding:"1rem 1.25rem",display:"flex",alignItems:"center",gap:"0.75rem"}}>
+                <span style={{fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",color:"#ccc",minWidth:20}}>0{i + 1}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:"0.9rem",fontWeight:700,color:"#1a1a1a",margin:0,lineHeight:1.3}}>
+                    {av ? av.name : `${w.brand} ${w.model}`}
+                  </p>
+                  <div style={{display:"flex",gap:"0.75rem",alignItems:"center",marginTop:"0.2rem",flexWrap:"wrap"}}>
+                    {w.purchase_price && (
+                      <span style={{fontSize:"0.78rem",color:"#888"}}>Paid: £{Number(w.purchase_price).toLocaleString("en-GB")}</span>
+                    )}
+                    {w.condition && (
+                      <span style={{fontSize:"0.68rem",fontWeight:600,color:"#888",textTransform:"capitalize"}}>{w.condition.replace("_", " ")}</span>
+                    )}
+                  </div>
+                </div>
+                {/* Valuation data */}
+                {av && (
+                  <div style={{textAlign:"right",flexShrink:0}}>
+                    <p style={{fontSize:"1rem",fontWeight:700,color:"#1a1a1a",margin:0}}>{formatGBP(av.current_value_mid)}</p>
+                    <div style={{display:"flex",alignItems:"center",gap:"0.3rem",justifyContent:"flex-end",marginTop:"0.15rem"}}>
+                      <span style={{fontSize:"0.82rem",color:trendColor(av.market_trend)}}>{trendIcon(av.market_trend)}</span>
+                      <span style={{
+                        fontSize:"0.6rem",fontWeight:700,letterSpacing:"0.08em",
+                        padding:"0.12rem 0.35rem",borderRadius:2,
+                        background:sellColors[av.sell_timing] || "#888",
+                        color:av.sell_timing === "hold" ? "#1a1a1a" : "#fff",
+                      }}>{sellLabels[av.sell_timing] || av.sell_timing}</span>
+                    </div>
+                  </div>
+                )}
+                {!av && (
+                  <button onClick={() => removeWatch(w.id)} style={{
+                    background:"none",border:"none",cursor:"pointer",color:"#ccc",padding:"0.25rem",
+                    fontSize:"0.85rem",fontFamily:"'Albert Sans',system-ui,sans-serif",
+                  }} title="Remove">✕</button>
+                )}
+              </div>
+              {/* Expanded detail when analysis is present */}
+              {av && (
+                <div style={{padding:"0 1.25rem 1rem",borderTop:"1px solid #f0f0f0",paddingTop:"0.75rem"}}>
+                  <div style={{display:"flex",gap:"1.25rem",marginBottom:"0.4rem"}}>
+                    <span style={{fontSize:"0.75rem",color:"#888"}}>Low: {formatGBP(av.current_value_low)}</span>
+                    <span style={{fontSize:"0.75rem",color:"#888"}}>High: {formatGBP(av.current_value_high)}</span>
+                    {w.purchase_price && av.current_value_mid && (
+                      <span style={{
+                        fontSize:"0.75rem",fontWeight:600,
+                        color: av.current_value_mid >= Number(w.purchase_price) ? "#2d6a4f" : "#c0392b",
+                      }}>
+                        {av.current_value_mid >= Number(w.purchase_price) ? "+" : ""}
+                        {formatGBP(av.current_value_mid - Number(w.purchase_price))}
+                        {" "}({av.current_value_mid >= Number(w.purchase_price) ? "+" : ""}
+                        {Math.round(((av.current_value_mid - Number(w.purchase_price)) / Number(w.purchase_price)) * 100)}%)
+                      </span>
+                    )}
+                  </div>
+                  <p style={{fontSize:"0.78rem",lineHeight:1.5,color:"#666",margin:0}}>{av.trend_note} {av.sell_note}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Next Watch Recommendation (after analysis) */}
+      {analysis?.next_watch && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.15s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>YOUR NEXT WATCH</p>
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:"0.35rem"}}>
+            <p style={{fontSize:"0.95rem",fontWeight:700,color:"#1a1a1a",margin:0}}>{analysis.next_watch.name}</p>
+            <span style={{fontSize:"0.82rem",fontWeight:600,color:"#888",flexShrink:0}}>{analysis.next_watch.price}</span>
+          </div>
+          <p style={{fontSize:"0.85rem",lineHeight:1.7,color:"#444",margin:"0 0 0.75rem"}}>{analysis.next_watch.reason}</p>
+          {(analysis.next_watch.buy_links || []).length > 0 && (
+            <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
+              {analysis.next_watch.buy_links.map((link, j) => (
+                <a key={j} href={link.url} target="_blank" rel="noopener noreferrer"
+                  style={{
+                    display:"inline-flex",alignItems:"center",gap:"0.3rem",
+                    fontSize:"0.75rem",fontWeight:600,color:"#1a1a1a",
+                    textDecoration:"none",letterSpacing:"0.03em",
+                    padding:"0.35rem 0.65rem",border:"1px solid #e0e0e0",
+                    borderRadius:3,background:"#fafafa",transition:"all 0.12s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
+                >
+                  {link.label} <ExternalIcon/>
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Sell Candidate */}
+      {analysis?.sell_candidate && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.2s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#c0392b",marginBottom:"0.6rem"}}>CONSIDER SELLING</p>
+          <p style={{fontSize:"0.9rem",fontWeight:700,color:"#1a1a1a",margin:"0 0 0.3rem"}}>{analysis.sell_candidate.name}</p>
+          <p style={{fontSize:"0.85rem",lineHeight:1.7,color:"#444",margin:0}}>{analysis.sell_candidate.reason}</p>
+        </div>
+      )}
+
+      {/* Error */}
+      {error && (
+        <div style={{background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1rem 1.25rem",marginBottom:"1rem"}}>
+          <p style={{color:"#c0392b",fontSize:"0.85rem",margin:0}}>{error}</p>
+        </div>
+      )}
+
+      {/* Action Buttons */}
+      <div style={{display:"flex",gap:"0.75rem",marginBottom:"1.5rem"}}>
+        <button onClick={analyseCollection} disabled={watches.length === 0} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",flex:1,justifyContent:"center",
+          padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",background:watches.length > 0 ? "#1a1a1a" : "#ccc",color:"#fff",
+          border:"none",cursor:"pointer",fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}>{analysis ? "REFRESH VALUATIONS" : "ANALYSE MY COLLECTION"} <ArrowRight/></button>
+      </div>
+
+      {/* Session disclaimer */}
+      <div style={{
+        background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"1rem 1.25rem",
+      }}>
+        <p style={{fontSize:"0.75rem",lineHeight:1.6,color:"#888",margin:0}}>
+          This is a session-based preview — your collection is stored in your browser and will be lost when you close the page. Account-based persistence with full portfolio tracking, insurance PDF export, and sell alerts is coming soon.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // ─── Watch Finder Tool ────────────────────────────────────────────────────────
  
 function WatchFinder() {
@@ -1948,7 +2355,7 @@ export default function App() {
           {activePage === "valuation" && <ValuationTool/>}
           {activePage === "shouldibuy" && <ShouldIBuyTool/>}
           {activePage === "authentication" && <AuthenticationTool/>}
-          {activePage === "collection" && <ComingSoon toolId={activePage}/>}
+          {activePage === "collection" && <CollectionTool/>}
         </main>
       </div>
     </div>
