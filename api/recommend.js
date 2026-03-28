@@ -97,11 +97,24 @@ export default async function handler(req, res) {
     if (!text) return res.status(500).json({ error: 'No text from Gemini' });
 
     const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-    const start = clean.indexOf('[');
-    const end = clean.lastIndexOf(']');
-    if (start === -1 || end === -1) return res.status(500).json({ error: 'No JSON array found', raw: text });
 
-    const watches = JSON.parse(clean.slice(start, end + 1));
+    // Try to parse as object first (new format), fall back to array (old format)
+    let watches, collection_note;
+    const objStart = clean.indexOf('{');
+    const objEnd = clean.lastIndexOf('}');
+    const arrStart = clean.indexOf('[');
+    const arrEnd = clean.lastIndexOf(']');
+
+    if (objStart !== -1 && objEnd !== -1 && (objStart < arrStart || arrStart === -1)) {
+      const parsed = JSON.parse(clean.slice(objStart, objEnd + 1));
+      watches = parsed.watches || [];
+      collection_note = parsed.collection_note || '';
+    } else if (arrStart !== -1 && arrEnd !== -1) {
+      watches = JSON.parse(clean.slice(arrStart, arrEnd + 1));
+      collection_note = '';
+    } else {
+      return res.status(500).json({ error: 'No JSON found', raw: text });
+    }
 
     const enriched = watches.map(watch => ({
       ...watch,
@@ -111,7 +124,7 @@ export default async function handler(req, res) {
     }));
 
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json({ watches: enriched });
+    return res.status(200).json({ watches: enriched, collection_note });
 
   } catch (error) {
     if (error.name === 'AbortError') {
