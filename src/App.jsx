@@ -76,6 +76,47 @@ const budgetLabels = {
   "2000_5000": "£2,000–£5,000", "5000_15000": "£5,000–£15,000",
   above_15000: "above £15,000",
 };
+
+const styleLabels = {
+  classic: "Classic", modern: "Modern", bold: "Bold", minimalist: "Minimal",
+  vintage: "Vintage", technical: "Tool watch",
+};
+const typeLabels = {
+  dress: "Dress", sport: "Sport", sport_dress: "Sport-dress",
+  pilot: "Pilot / field", diver: "Diver", chronograph: "Chronograph",
+};
+
+function buildQuizSummary(answers) {
+  const parts = [];
+  if (answers.dress_vs_sport) parts.push(typeLabels[answers.dress_vs_sport] || answers.dress_vs_sport);
+  if (answers.style) parts.push(styleLabels[answers.style] || answers.style);
+  if (answers.budget) parts.push(budgetLabels[answers.budget] || answers.budget);
+  return parts.join(" · ");
+}
+
+function encodeAnswersToURL(answers) {
+  const params = new URLSearchParams();
+  Object.entries(answers).forEach(([key, val]) => {
+    if (Array.isArray(val)) params.set(key, val.join(","));
+    else if (val) params.set(key, val);
+  });
+  return params.toString();
+}
+
+function decodeAnswersFromURL() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.size === 0) return null;
+    const answers = {};
+    const multiKeys = ["use_case", "brand_pref"];
+    for (const [key, val] of params) {
+      if (multiKeys.includes(key)) answers[key] = val.split(",");
+      else answers[key] = val;
+    }
+    if (answers.budget) return answers;
+    return null;
+  } catch { return null; }
+}
  
 function buildPrompt(answers) {
   const budget = budgetLabels[answers.budget] || answers.budget;
@@ -98,6 +139,7 @@ IMPORTANT RULES:
 - Amazon and F.Hinds do NOT stock luxury brands (Rolex, Omega, Patek, AP, Breitling, IWC, JLC etc). Never include them for luxury watches.
 - Chrono24 and eBay stock almost everything pre-owned. WatchFinder only stocks mid-to-high luxury.
 - Goldsmiths, Beaverbrooks, and Chisholm Hunter are authorised dealers — only include them for brands they actually carry.
+- The 3 watches should complement each other — offer genuine variety in style, brand, or character. Do not recommend 3 very similar watches.
 
 Available platform keys and what they stock:
 - "chrono24" — pre-owned and grey market, all brands
@@ -115,15 +157,20 @@ Available platform keys and what they stock:
 - "fhinds" — new, budget to mid range UK ONLY (Seiko, Citizen, Casio, Rotary, Lorus)
 - "citizen" — new Citizen brand watches only
 
-Return ONLY a raw JSON array of 3 objects:
+Return ONLY a raw JSON object with these fields:
+
+"collection_note": string (2-3 sentences explaining why these 3 watches work well together as a shortlist — what variety they offer, why each brings something different to the table. Written in a warm, knowledgeable tone as if you're a trusted friend who knows watches.)
+
+"watches": array of exactly 3 objects, each with:
 - "name": string (full model name including reference if known)
 - "price": string (in GBP with £ symbol, e.g. "£4,500" or "£350–£500")
+- "value_verdict": string (one of: "Great value for money", "Fair market price", "Premium but worth it", "Investment potential", "Affordable classic")
 - "availability": "new" | "preowned" | "both"
-- "reason": string (2-3 sentences, written in a friendly expert tone)
+- "reason": string (2-3 sentences, written in a friendly expert tone — explain why this specific watch suits this specific person)
 - "specs": array of 3 strings (key specs like case size, movement, water resistance)
 - "platforms": array of platform keys that genuinely stock this watch — be selective, not exhaustive
 
-No markdown, no code blocks. Start with [ end with ].`;
+No markdown, no code blocks. Start with { end with }.`;
 }
  
 // ─── Nav Config ───────────────────────────────────────────────────────────────
@@ -287,7 +334,20 @@ function WatchCard({ watch, index }) {
         </span>
         <div style={{flex:1,minWidth:0}}>
           <p style={{fontSize:"1rem",fontWeight:700,color:"#fff",margin:0,lineHeight:1.3}}>{watch.name}</p>
-          <p style={{fontSize:"0.8rem",color:"#999",margin:"0.2rem 0 0"}}>{watch.price}</p>
+          <div className="mobile-flex-wrap" style={{display:"flex",alignItems:"center",gap:"0.6rem",marginTop:"0.25rem",flexWrap:"wrap"}}>
+            <span style={{fontSize:"0.8rem",color:"#999"}}>{watch.price}</span>
+            {watch.value_verdict && (
+              <span style={{
+                fontSize:"0.58rem",fontWeight:700,letterSpacing:"0.06em",
+                padding:"0.15rem 0.4rem",borderRadius:2,
+                background: watch.value_verdict === "Great value for money" ? "#2d6a4f" :
+                  watch.value_verdict === "Investment potential" ? "#6b4c9a" :
+                  watch.value_verdict === "Premium but worth it" ? "#1d3557" :
+                  watch.value_verdict === "Affordable classic" ? "#2d6a4f" : "#555",
+                color:"#fff",whiteSpace:"nowrap",
+              }}>{watch.value_verdict.toUpperCase()}</span>
+            )}
+          </div>
         </div>
         {watch.availability && (
           <span style={{
@@ -2037,7 +2097,9 @@ function WatchFinder() {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
+  const [collectionNote, setCollectionNote] = useState("");
   const [error, setError] = useState(null);
+  const [shared, setShared] = useState(false);
  
   const q = questions[step];
   const isLast = step === questions.length - 1;
@@ -2059,10 +2121,12 @@ function WatchFinder() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Server error');
-      if (data.watches) setResults(data.watches);
-      else throw new Error('No watches returned');
+      if (data.watches) {
+        setResults(data.watches);
+        setCollectionNote(data.collection_note || "");
+      } else throw new Error('No watches returned');
     } catch (e) {
-      const msg = e.message?.includes('timed out') || response?.status === 504
+      const msg = e.message?.includes('timed out')
         ? 'The request took too long. Please try again — it usually works on the second attempt.'
         : 'Something went wrong. Please try again.';
       setError(msg);
@@ -2071,7 +2135,17 @@ function WatchFinder() {
     }
   };
  
-  const reset = () => { setStep(0); setAnswers({}); setResults(null); setError(null); setLoading(false); };
+  const reset = () => { setStep(0); setAnswers({}); setResults(null); setCollectionNote(""); setError(null); setLoading(false); setShared(false); };
+  const tweakAnswers = () => { setResults(null); setCollectionNote(""); setError(null); setStep(0); setShared(false); };
+ 
+  const shareResults = () => {
+    const params = encodeAnswersToURL(answers);
+    const url = `${window.location.origin}${window.location.pathname}?${params}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShared(true);
+      setTimeout(() => setShared(false), 2500);
+    }).catch(() => {});
+  };
  
   if (loading) return <Loader title="Finding your watches" subtitle="Searching across all our partners…"/>;
  
@@ -2089,20 +2163,57 @@ function WatchFinder() {
  
   if (results) return (
     <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
-      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+      {/* Header with summary */}
+      <div style={{marginBottom:"1.5rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
         <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>YOUR RESULTS</p>
-        <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>Three watches picked for you</h2>
+        <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.4rem"}}>Three watches picked for you</h2>
+        {buildQuizSummary(answers) && (
+          <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>{buildQuizSummary(answers)}</p>
+        )}
       </div>
-      <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
+
+      {/* Collection Note */}
+      {collectionNote && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
+          padding:"1.25rem",marginBottom:"1.25rem",animation:"fadeUp 0.4s ease both",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.5rem"}}>WHY THESE THREE</p>
+          <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:0}}>{collectionNote}</p>
+        </div>
+      )}
+
+      {/* Watch Cards */}
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"1.5rem"}}>
         {results.map((watch, i) => <WatchCard key={i} watch={watch} index={i}/>)}
       </div>
-      <button onClick={reset} style={{
-        display:"inline-flex",alignItems:"center",gap:"0.5rem",
-        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
-        letterSpacing:"0.05em",background:"#f0f0f0",color:"#555",
-        border:"1px solid #ddd",cursor:"pointer",
-        fontFamily:"'Albert Sans',system-ui,sans-serif",
-      }}><ArrowLeft/> START OVER</button>
+
+      {/* Action Buttons */}
+      <div className="mobile-flex-wrap" style={{display:"flex",gap:"0.6rem",alignItems:"center",marginBottom:"1.5rem",flexWrap:"wrap"}}>
+        <button onClick={tweakAnswers} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",
+          padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",background:"#f0f0f0",color:"#555",
+          border:"1px solid #ddd",cursor:"pointer",
+          fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}><ArrowLeft/> TWEAK ANSWERS</button>
+        <button onClick={reset} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",
+          padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",background:"#fff",color:"#888",
+          border:"1px solid #e0e0e0",cursor:"pointer",
+          fontFamily:"'Albert Sans',system-ui,sans-serif",
+        }}>START OVER</button>
+        <button onClick={shareResults} style={{
+          display:"inline-flex",alignItems:"center",gap:"0.5rem",
+          padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+          letterSpacing:"0.05em",marginLeft:"auto",
+          background:shared?"#2d6a4f":"#1a1a1a",color:"#fff",
+          border:"none",cursor:"pointer",
+          fontFamily:"'Albert Sans',system-ui,sans-serif",
+          transition:"background 0.2s",
+        }}>{shared ? "LINK COPIED ✓" : "SHARE PICKS"}</button>
+      </div>
     </div>
   );
  
