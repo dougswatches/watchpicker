@@ -2232,7 +2232,7 @@ export default function App() {
         @media (max-width: 768px) {
           .sidebar { transform: translateX(-100%); transition: transform 0.25s ease; position: fixed !important; z-index: 100; height: 100vh !important; }
           .sidebar.open { transform: translateX(0); }
-          .overlay { display: block !important; }
+          .overlay.active { display: block !important; }
           .mobile-menu-btn { display: flex !important; }
           .mobile-stack { grid-template-columns: 1fr !important; }
           .mobile-header { padding: 0 1rem !important; }
@@ -2251,7 +2251,7 @@ export default function App() {
       `}</style>
  
       {/* Sidebar overlay for mobile */}
-      <div className="overlay" onClick={() => setSidebarOpen(false)} style={{
+      <div className={`overlay${sidebarOpen?" active":""}`} onClick={() => setSidebarOpen(false)} style={{
         display:"none",position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:99,
       }}/>
  
