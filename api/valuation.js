@@ -3,7 +3,7 @@ export const config = {
     bodyParser: { sizeLimit: '1mb' },
   },
 };
- 
+
 const IDS = {
   amazon:      process.env.AMAZON_TRACKING_ID   || '',
   ebay:        process.env.EBAY_CAMPAIGN_ID      || '',
@@ -11,7 +11,7 @@ const IDS = {
   chrono24:    process.env.CHRONO24_PARTNER_ID   || '',
   zeitauktion: process.env.ZEITAUKTION_ID        || '',
 };
- 
+
 const AWIN_MERCHANTS = {
   watchfinder:    '10552',
   goldsmiths:     '6666',
@@ -20,14 +20,14 @@ const AWIN_MERCHANTS = {
   thbaker:        '14910',
   houseofwatches: '6543',
 };
- 
+
 function encode(q) { return encodeURIComponent(q); }
- 
+
 function awinUrl(merchantId, dest) {
   if (!IDS.awin) return dest;
   return `https://www.awin1.com/cread.php?awinmid=${merchantId}&awinaffid=${IDS.awin}&clickref=&p=${encodeURIComponent(dest)}`;
 }
- 
+
 function buildLink(platform, name) {
   const q = encode(name);
   switch (platform) {
@@ -58,21 +58,21 @@ function buildLink(platform, name) {
     case 'fhinds':
       return { label: 'F.Hinds', url: `https://www.fhinds.co.uk/search?q=${q}` };
     case 'citizen':
-      return { label: 'Citizen', url: `https://www.citizenwatch.com/us/en/search/?q=${q}` };
+      return { label: 'Citizen', url: `https://www.citizenwatch.com/uk/en/search/?q=${q}` };
     default:
       return null;
   }
 }
- 
+
 function buildValuationPrompt({ brand, model, reference, condition, notes }) {
   return `You are a world-class watch valuation expert with deep knowledge of the pre-owned and new watch markets. Provide a detailed market valuation for this watch:
- 
+
 - Brand: ${brand}
 - Model: ${model}
 ${reference ? `- Reference number: ${reference}` : ''}
 - Condition: ${condition}
 ${notes ? `- Additional notes: ${notes}` : ''}
- 
+
 Available platform keys for buying/selling this watch:
 - "chrono24" — pre-owned and grey market, all brands
 - "watchfinder" — pre-owned luxury (Rolex, Omega, TAG, Breitling, IWC etc)
@@ -88,7 +88,7 @@ Available platform keys for buying/selling this watch:
 - "cwsellors" — new, mid range UK (Seiko, Citizen, Tissot, Hamilton, Rotary)
 - "fhinds" — new, budget to mid range UK (Seiko, Citizen, Casio, Rotary, Lorus)
 - "citizen" — new Citizen brand watches only
- 
+
 Return ONLY a raw JSON object (not an array) with these fields:
 - "watch_name": string (full name e.g. "Rolex Submariner Date 126610LN")
 - "value_low": number (low estimate in GBP, no currency symbol)
@@ -106,49 +106,55 @@ Return ONLY a raw JSON object (not an array) with these fields:
 - "platforms_sell": array of platform keys where someone could SELL this watch
 - "confidence": "high" | "medium" | "low" (how confident you are in the valuation — low if the model is obscure or details are vague)
 - "confidence_note": string (1 sentence explaining confidence level)
- 
+
 All GBP values should be realistic current market prices. Be honest — if the watch is common and affordable, say so. If it's highly sought after, explain why.
- 
+
 No markdown, no code blocks. Start with { end with }.`;
 }
- 
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
- 
+
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const { brand, model, reference, condition, notes } = body || {};
- 
+
   if (!brand || !model) return res.status(400).json({ error: 'Brand and model are required' });
- 
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not set' });
- 
+
   try {
     const prompt = buildValuationPrompt({ brand, model, reference, condition: condition || 'Unknown', notes });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
- 
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.5, maxOutputTokens: 4096 },
       }),
     });
- 
+
+    clearTimeout(timeout);
+
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: 'Gemini API error', details: data });
- 
+
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (!text) return res.status(500).json({ error: 'No text from Gemini' });
- 
+
     const clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
     const start = clean.indexOf('{');
     const end = clean.lastIndexOf('}');
     if (start === -1 || end === -1) return res.status(500).json({ error: 'No JSON object found', raw: text });
- 
+
     const valuation = JSON.parse(clean.slice(start, end + 1));
- 
+
     // Build affiliate links for buy and sell platforms
     const watchName = valuation.watch_name || `${brand} ${model}`;
     valuation.buy_links = (valuation.platforms_buy || [])
@@ -157,11 +163,14 @@ export default async function handler(req, res) {
     valuation.sell_links = (valuation.platforms_sell || [])
       .map(p => buildLink(p, watchName))
       .filter(Boolean);
- 
+
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json({ valuation });
- 
+
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Request timed out. Please try again.' });
+    }
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }
