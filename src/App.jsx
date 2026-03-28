@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
  
 // ─── Quiz Data ────────────────────────────────────────────────────────────────
  
@@ -2100,7 +2100,24 @@ function WatchFinder() {
   const [collectionNote, setCollectionNote] = useState("");
   const [error, setError] = useState(null);
   const [shared, setShared] = useState(false);
- 
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
+
+  // Auto-submit from shared URL
+  useEffect(() => {
+    if (autoSubmitted) return;
+    const urlAnswers = decodeAnswersFromURL();
+    if (urlAnswers && urlAnswers.budget) {
+      setAnswers(urlAnswers);
+      setAutoSubmitted(true);
+      // Clear URL params without reload
+      window.history.replaceState({}, '', window.location.pathname);
+      // Submit after state settles
+      setTimeout(() => {
+        submitWithAnswers(urlAnswers);
+      }, 100);
+    }
+  }, []);
+
   const q = questions[step];
   const isLast = step === questions.length - 1;
   const canAdvance = () => {
@@ -2108,16 +2125,16 @@ function WatchFinder() {
     if (q.type === "multi") return (answers[q.id] || []).length > 0;
     return true;
   };
- 
+
   const handleNext = () => { if (isLast) submitQuiz(); else setStep(s => s + 1); };
- 
-  const submitQuiz = async () => {
+
+  const submitWithAnswers = async (ans) => {
     setLoading(true); setError(null);
     try {
       const response = await fetch('/api/recommend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: buildPrompt(answers) }),
+        body: JSON.stringify({ prompt: buildPrompt(ans) }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Server error');
@@ -2134,10 +2151,12 @@ function WatchFinder() {
       setLoading(false);
     }
   };
- 
+
+  const submitQuiz = () => submitWithAnswers(answers);
+
   const reset = () => { setStep(0); setAnswers({}); setResults(null); setCollectionNote(""); setError(null); setLoading(false); setShared(false); };
   const tweakAnswers = () => { setResults(null); setCollectionNote(""); setError(null); setStep(0); setShared(false); };
- 
+
   const shareResults = () => {
     const params = encodeAnswersToURL(answers);
     const url = `${window.location.origin}${window.location.pathname}?${params}`;
@@ -2146,9 +2165,22 @@ function WatchFinder() {
       setTimeout(() => setShared(false), 2500);
     }).catch(() => {});
   };
- 
-  if (loading) return <Loader title="Finding your watches" subtitle="Searching across all our partners…"/>;
- 
+
+  // Personalised loading screen
+  if (loading) {
+    const summary = buildQuizSummary(answers);
+    return (
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
+        <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
+        <div style={{textAlign:"center"}}>
+          <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Finding your watches</p>
+          {summary && <p style={{fontSize:"0.82rem",color:"#888",margin:"0 0 0.25rem"}}>{summary}</p>}
+          <p style={{fontSize:"0.78rem",color:"#aaa",margin:0}}>Searching across 14 platforms…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
       <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
@@ -2160,16 +2192,26 @@ function WatchFinder() {
       }}>TRY AGAIN</button>
     </div>
   );
- 
+
+  // Count unique platforms across all results
+  const platformCount = results ? new Set(results.flatMap(w => (w.buy_links || []).map(l => l.label))).size : 0;
+
   if (results) return (
     <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
       {/* Header with summary */}
       <div style={{marginBottom:"1.5rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
         <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>YOUR RESULTS</p>
         <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.4rem"}}>Three watches picked for you</h2>
-        {buildQuizSummary(answers) && (
-          <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>{buildQuizSummary(answers)}</p>
-        )}
+        <div className="mobile-flex-wrap" style={{display:"flex",alignItems:"center",gap:"0.75rem",flexWrap:"wrap"}}>
+          {buildQuizSummary(answers) && (
+            <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>{buildQuizSummary(answers)}</p>
+          )}
+          {platformCount > 0 && (
+            <span style={{fontSize:"0.68rem",fontWeight:600,color:"#aaa",padding:"0.15rem 0.5rem",background:"#f0f0f0",borderRadius:2}}>
+              {platformCount} platforms searched
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Collection Note */}
