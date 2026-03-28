@@ -124,7 +124,7 @@ No markdown, no code blocks. Start with [ end with ].`;
 const NAV_ITEMS = [
   { id: "finder",         label: "Watch Finder",        icon: "◎", badge: "FREE",    live: true  },
   { id: "valuation",      label: "Valuation Tool",      icon: "◈", badge: "FREE",    live: true  },
-  { id: "shouldibuy",     label: "Should I Buy This?",  icon: "◇", badge: "COMING",  live: false },
+  { id: "shouldibuy",     label: "Should I Buy This?",  icon: "◇", badge: "FREE",    live: true  },
   { id: "authentication", label: "Authentication",       icon: "◉", badge: "COMING",  live: false },
   { id: "collection",     label: "My Collection",        icon: "▣", badge: "PRO",     live: false },
 ];
@@ -774,6 +774,475 @@ function ValuationResult({ result, onReset, formatGBP }) {
   );
 }
  
+// ─── Should I Buy This? Tool ─────────────────────────────────────────────────
+ 
+const PLATFORM_SOURCE_OPTIONS = [
+  { value: "ebay", label: "eBay" },
+  { value: "chrono24", label: "Chrono24" },
+  { value: "facebook", label: "Facebook Marketplace" },
+  { value: "forum", label: "Watch forum" },
+  { value: "dealer", label: "Dealer / shop" },
+  { value: "private", label: "Private seller" },
+  { value: "other", label: "Other / not sure" },
+];
+ 
+function ShouldIBuyTool() {
+  const [formData, setFormData] = useState({
+    watch_description: "", asking_price: "", seller_description: "", platform_source: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+ 
+  const canSubmit = formData.watch_description.trim().length > 10;
+ 
+  const handleSubmit = async () => {
+    setLoading(true); setError(null);
+    try {
+      const response = await fetch('/api/shouldibuy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (data.analysis) setResult(data.analysis);
+      else throw new Error(data.error || 'No analysis returned');
+    } catch (e) {
+      setError('Something went wrong. Please check your inputs and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+ 
+  const reset = () => {
+    setFormData({ watch_description: "", asking_price: "", seller_description: "", platform_source: "" });
+    setResult(null); setError(null);
+  };
+ 
+  if (loading) return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
+      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
+      <div style={{textAlign:"center"}}>
+        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Analysing this listing</p>
+        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Checking price, red flags, and alternatives…</p>
+      </div>
+    </div>
+  );
+ 
+  if (error) return (
+    <div style={{textAlign:"center",padding:"3rem 1rem"}}>
+      <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
+      <button onClick={handleSubmit} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",background:"#1a1a1a",color:"#fff",border:"none",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}>TRY AGAIN</button>
+    </div>
+  );
+ 
+  if (result) return <ShouldIBuyResult result={result} onReset={reset}/>;
+ 
+  // ─── Input Form ───
+  return (
+    <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
+      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>
+          SHOULD I BUY THIS?
+        </p>
+        <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>
+          Get a second opinion before you buy
+        </h2>
+        <p style={{fontSize:"0.85rem",color:"#888"}}>
+          Describe the listing and we'll check for red flags, price fairness, and better alternatives.
+        </p>
+      </div>
+ 
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
+        {/* Watch description */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            DESCRIBE THE WATCH *
+          </label>
+          <textarea rows={4}
+            placeholder={"Paste the listing description here, or describe it yourself.\n\ne.g. Omega Speedmaster Professional, 2021, box and papers, hesalite crystal, manual wind, bracelet has desk diving marks but crystal is clean…"}
+            value={formData.watch_description}
+            onChange={e => setFormData(p => ({...p, watch_description: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.85rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",resize:"vertical",outline:"none",lineHeight:1.6,
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+ 
+        {/* Asking price */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            ASKING PRICE <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional but helps a lot)</span>
+          </label>
+          <input type="text" placeholder="e.g. £3,200 or $4,500"
+            value={formData.asking_price}
+            onChange={e => setFormData(p => ({...p, asking_price: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none",
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+ 
+        {/* Where they found it */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            WHERE DID YOU FIND IT? <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional)</span>
+          </label>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0.4rem"}}>
+            {PLATFORM_SOURCE_OPTIONS.map(opt => {
+              const sel = formData.platform_source === opt.value;
+              return (
+                <button key={opt.value}
+                  className={`opt-btn${sel?" selected":""}`}
+                  onClick={() => setFormData(p => ({...p, platform_source: sel ? "" : opt.value}))}>
+                  <div style={{
+                    width:16,height:16,borderRadius:"50%",flexShrink:0,
+                    border:`2px solid ${sel?"#1a1a1a":"#ccc"}`,
+                    background:sel?"#1a1a1a":"#fff",
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    color:"#fff",transition:"all 0.12s",
+                  }}>
+                    {sel && <CheckIcon/>}
+                  </div>
+                  <span style={{fontSize:"0.85rem"}}>{opt.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+ 
+        {/* Seller details */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            SELLER DETAILS <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional — anything that might help)</span>
+          </label>
+          <textarea rows={2}
+            placeholder="e.g. 500 feedback on eBay, says it was serviced in 2023, no returns accepted…"
+            value={formData.seller_description}
+            onChange={e => setFormData(p => ({...p, seller_description: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",resize:"vertical",outline:"none",lineHeight:1.6,
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+      </div>
+ 
+      <button onClick={handleSubmit} disabled={!canSubmit} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",
+        background:canSubmit?"#1a1a1a":"#ccc",color:"#fff",border:"none",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",width:"100%",justifyContent:"center",
+      }}>
+        CHECK THIS LISTING <ArrowRight/>
+      </button>
+    </div>
+  );
+}
+ 
+// ─── Should I Buy Result ─────────────────────────────────────────────────────
+ 
+function ShouldIBuyResult({ result, onReset }) {
+  const [showAllAlts, setShowAllAlts] = useState(false);
+ 
+  const verdictConfig = {
+    "BUY": { bg: "#2d6a4f", text: "#fff", label: "BUY", icon: "✓" },
+    "PROCEED WITH CAUTION": { bg: "#e9c46a", text: "#1a1a1a", label: "CAUTION", icon: "!" },
+    "AVOID": { bg: "#c0392b", text: "#fff", label: "AVOID", icon: "✕" },
+  };
+  const vc = verdictConfig[result.verdict] || verdictConfig["PROCEED WITH CAUTION"];
+ 
+  const priceLabels = {
+    great_deal: "Great deal", fair: "Fair price", slightly_high: "Slightly high",
+    overpriced: "Overpriced", cannot_assess: "Can't assess",
+  };
+  const priceColors = {
+    great_deal: "#2d6a4f", fair: "#2d6a4f", slightly_high: "#e9c46a",
+    overpriced: "#c0392b", cannot_assess: "#888",
+  };
+ 
+  const formatGBP = (n) => {
+    if (!n && n !== 0) return null;
+    return "£" + Number(n).toLocaleString("en-GB");
+  };
+ 
+  const redFlags = result.red_flags || [];
+  const greenFlags = result.green_flags || [];
+  const questions = result.questions_to_ask || [];
+  const alternatives = result.alternatives || [];
+  const searchLinks = result.search_links || [];
+ 
+  const severityColors = { high: "#c0392b", medium: "#e9c46a", low: "#888" };
+  const confColors = { high: "#2d6a4f", medium: "#e9c46a", low: "#c0392b" };
+ 
+  return (
+    <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
+      {/* Header */}
+      <div style={{marginBottom:"1.5rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>LISTING ANALYSIS</p>
+        <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>{result.identified_watch}</h2>
+      </div>
+ 
+      {/* Verdict Card */}
+      <div style={{
+        background:"#1a1a1a",borderRadius:4,padding:"1.5rem",marginBottom:"1rem",
+        animation:"fadeUp 0.4s ease both",
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:"0.75rem",marginBottom:"1rem"}}>
+          <div style={{
+            width:40,height:40,borderRadius:"50%",background:vc.bg,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:"1.1rem",fontWeight:700,color:vc.text,flexShrink:0,
+          }}>{vc.icon}</div>
+          <div style={{flex:1}}>
+            <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"0.2rem"}}>
+              <span style={{
+                fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",
+                padding:"0.2rem 0.6rem",borderRadius:2,background:vc.bg,color:vc.text,
+              }}>{vc.label}</span>
+            </div>
+            <p style={{fontSize:"1rem",fontWeight:600,color:"#fff",margin:0,lineHeight:1.3}}>
+              {result.verdict_summary}
+            </p>
+          </div>
+        </div>
+        <p style={{fontSize:"0.85rem",lineHeight:1.7,color:"#aaa",margin:0}}>
+          {result.verdict_detail}
+        </p>
+      </div>
+ 
+      {/* Price Assessment */}
+      <div style={{
+        background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+        marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.05s",
+      }}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:"0.6rem"}}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",margin:0}}>PRICE CHECK</p>
+          <span style={{
+            fontSize:"0.65rem",fontWeight:700,letterSpacing:"0.1em",
+            padding:"0.2rem 0.5rem",borderRadius:2,
+            background:priceColors[result.price_assessment] || "#888",
+            color: result.price_assessment === "slightly_high" ? "#1a1a1a" : "#fff",
+          }}>{priceLabels[result.price_assessment] || "Unknown"}</span>
+        </div>
+        {(result.market_value_low || result.market_value_high) && (
+          <div style={{display:"flex",gap:"1.5rem",marginBottom:"0.75rem"}}>
+            {result.market_value_low && (
+              <div>
+                <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#aaa",marginBottom:"0.1rem"}}>MARKET LOW</p>
+                <p style={{fontSize:"1rem",fontWeight:600,color:"#1a1a1a",margin:0}}>{formatGBP(result.market_value_low)}</p>
+              </div>
+            )}
+            {result.market_value_high && (
+              <div>
+                <p style={{fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.1em",color:"#aaa",marginBottom:"0.1rem"}}>MARKET HIGH</p>
+                <p style={{fontSize:"1rem",fontWeight:600,color:"#1a1a1a",margin:0}}>{formatGBP(result.market_value_high)}</p>
+              </div>
+            )}
+          </div>
+        )}
+        <p style={{fontSize:"0.85rem",lineHeight:1.7,color:"#444",margin:0}}>{result.price_commentary}</p>
+      </div>
+ 
+      {/* Red Flags */}
+      {redFlags.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.1s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#c0392b",marginBottom:"0.75rem"}}>
+            RED FLAGS ({redFlags.length})
+          </p>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+            {redFlags.map((flag, i) => (
+              <div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
+                <div style={{
+                  width:8,height:8,borderRadius:"50%",flexShrink:0,marginTop:6,
+                  background:severityColors[flag.severity] || "#888",
+                }}/>
+                <div>
+                  <p style={{fontSize:"0.85rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.15rem"}}>
+                    {flag.flag}
+                    <span style={{
+                      fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.08em",
+                      marginLeft:"0.5rem",color:severityColors[flag.severity] || "#888",
+                      textTransform:"uppercase",
+                    }}>{flag.severity}</span>
+                  </p>
+                  <p style={{fontSize:"0.8rem",lineHeight:1.6,color:"#666",margin:0}}>{flag.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+ 
+      {/* Green Flags */}
+      {greenFlags.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.15s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#2d6a4f",marginBottom:"0.75rem"}}>
+            GREEN FLAGS ({greenFlags.length})
+          </p>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+            {greenFlags.map((flag, i) => (
+              <div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
+                <div style={{
+                  width:8,height:8,borderRadius:"50%",flexShrink:0,marginTop:6,background:"#2d6a4f",
+                }}/>
+                <div>
+                  <p style={{fontSize:"0.85rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.1rem"}}>{flag.flag}</p>
+                  <p style={{fontSize:"0.8rem",lineHeight:1.6,color:"#666",margin:0}}>{flag.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+ 
+      {/* Questions to Ask */}
+      {questions.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.2s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.75rem"}}>
+            ASK THE SELLER
+          </p>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+            {questions.map((q, i) => (
+              <div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
+                <span style={{
+                  fontSize:"0.7rem",fontWeight:700,color:"#aaa",minWidth:18,paddingTop:2,
+                }}>{String(i + 1).padStart(2, '0')}</span>
+                <p style={{fontSize:"0.85rem",lineHeight:1.6,color:"#333",margin:0}}>{q}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+ 
+      {/* Alternatives */}
+      {alternatives.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.25s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.75rem"}}>
+            CONSIDER INSTEAD
+          </p>
+          <div style={{display:"flex",flexDirection:"column",gap:"1rem"}}>
+            {alternatives.map((alt, i) => (
+              <div key={i}>
+                <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:"0.25rem"}}>
+                  <p style={{fontSize:"0.9rem",fontWeight:700,color:"#1a1a1a",margin:0}}>{alt.name}</p>
+                  <span style={{fontSize:"0.8rem",fontWeight:600,color:"#888",flexShrink:0}}>{alt.price}</span>
+                </div>
+                <p style={{fontSize:"0.8rem",lineHeight:1.6,color:"#666",margin:"0 0 0.5rem"}}>{alt.reason}</p>
+                {(alt.buy_links || []).length > 0 && (
+                  <div style={{display:"flex",flexWrap:"wrap",gap:"0.35rem"}}>
+                    {alt.buy_links.map((link, j) => (
+                      <a key={j} href={link.url} target="_blank" rel="noopener noreferrer"
+                        style={{
+                          display:"inline-flex",alignItems:"center",gap:"0.3rem",
+                          fontSize:"0.72rem",fontWeight:600,color:"#1a1a1a",
+                          textDecoration:"none",padding:"0.3rem 0.55rem",
+                          border:"1px solid #e0e0e0",borderRadius:3,background:"#fafafa",
+                          transition:"all 0.12s",
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
+                      >
+                        {link.label} <ExternalIcon/>
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+ 
+      {/* Compare Prices */}
+      {searchLinks.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.3s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>
+            COMPARE PRICES ELSEWHERE
+          </p>
+          <div style={{display:"flex",flexWrap:"wrap",gap:"0.4rem"}}>
+            {searchLinks.map((link, i) => (
+              <a key={i} href={link.url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  display:"inline-flex",alignItems:"center",gap:"0.3rem",
+                  fontSize:"0.75rem",fontWeight:600,color:"#1a1a1a",
+                  textDecoration:"none",letterSpacing:"0.03em",
+                  padding:"0.35rem 0.65rem",border:"1px solid #e0e0e0",
+                  borderRadius:3,background:"#fafafa",transition:"all 0.12s",
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor="#1a1a1a"; e.currentTarget.style.background="#f0f0f0"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor="#e0e0e0"; e.currentTarget.style.background="#fafafa"; }}
+              >
+                {link.label} <ExternalIcon/>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+ 
+      {/* Confidence + Disclaimer */}
+      <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"1rem"}}>
+        <div style={{width:8,height:8,borderRadius:"50%",background:confColors[result.confidence] || "#888"}}/>
+        <span style={{fontSize:"0.78rem",fontWeight:600,color:"#555",textTransform:"capitalize"}}>{result.confidence} confidence</span>
+        {result.confidence_note && (
+          <span style={{fontSize:"0.75rem",color:"#888"}}>— {result.confidence_note}</span>
+        )}
+      </div>
+ 
+      <div style={{
+        background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"1rem 1.25rem",marginBottom:"1.5rem",
+      }}>
+        <p style={{fontSize:"0.75rem",lineHeight:1.6,color:"#888",margin:0}}>
+          This analysis is AI-generated based on the information you provided. It is not a guarantee of authenticity or value. Always inspect a watch in person or through a trusted third party before completing a purchase.
+        </p>
+      </div>
+ 
+      <button onClick={onReset} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",background:"#f0f0f0",color:"#555",
+        border:"1px solid #ddd",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}>
+        <ArrowLeft/> CHECK ANOTHER LISTING
+      </button>
+    </div>
+  );
+}
+ 
 // ─── Watch Finder Tool ────────────────────────────────────────────────────────
  
 function WatchFinder() {
@@ -1087,7 +1556,8 @@ export default function App() {
           `}</style>
           {activePage === "finder" && <WatchFinder/>}
           {activePage === "valuation" && <ValuationTool/>}
-          {activePage !== "finder" && activePage !== "valuation" && <ComingSoon toolId={activePage}/>}
+          {activePage === "shouldibuy" && <ShouldIBuyTool/>}
+          {activePage !== "finder" && activePage !== "valuation" && activePage !== "shouldibuy" && <ComingSoon toolId={activePage}/>}
         </main>
       </div>
     </div>
