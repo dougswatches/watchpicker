@@ -65,7 +65,7 @@ function buildLink(platform, name) {
 }
 
 function buildValuationPrompt({ brand, model, reference, condition, notes }) {
-  return `You are a world-class watch valuation expert with deep knowledge of the pre-owned and new watch markets. Provide a detailed market valuation for this watch:
+  return `You are a world-class watch valuation expert with deep knowledge of the pre-owned and new watch markets. You have access to current market data and recent sale prices. Provide a comprehensive market valuation for this watch:
 
 - Brand: ${brand}
 - Model: ${model}
@@ -73,41 +73,63 @@ ${reference ? `- Reference number: ${reference}` : ''}
 - Condition: ${condition}
 ${notes ? `- Additional notes: ${notes}` : ''}
 
+IMPORTANT RULES:
+- All prices MUST be in GBP (£). Never use USD.
+- Be realistic and honest. If the watch is common and affordable, say so. If it's highly sought after, explain why.
+- Base your valuation on actual market prices, not aspirational pricing.
+- Only include platforms where this SPECIFIC brand and model is genuinely sold.
+
 Available platform keys for buying/selling this watch:
 - "chrono24" — pre-owned and grey market, all brands
 - "watchfinder" — pre-owned luxury (Rolex, Omega, TAG, Breitling, IWC etc)
 - "watchenclave" — pre-owned mid to high-end
 - "zeitauktion" — pre-owned European auction, mid to high-end
 - "ebay" — pre-owned all price points, vintage, grey market
-- "amazon" — new watches, mainstream brands (Seiko, Citizen, Casio, Orient, Tissot, Hamilton etc)
-- "goldsmiths" — new, authorised dealer (mid to luxury: TAG, Longines, Omega, Breitling, Tudor)
-- "beaverbrooks" — new, authorised dealer (mid range: Seiko, Citizen, TAG, Tissot, Frederique Constant)
+- "amazon" — new watches, mainstream brands ONLY (Seiko, Citizen, Casio, Orient, Tissot, Hamilton)
+- "goldsmiths" — new, authorised dealer (TAG, Longines, Omega, Breitling, Tudor, Gucci)
+- "beaverbrooks" — new, authorised dealer (Seiko, Citizen, TAG, Tissot, Frederique Constant)
 - "chisholmhunter" — new, authorised dealer (mid to luxury, Scotland-based)
 - "thbaker" — new, authorised dealer (mid range UK)
 - "houseofwatches" — new and pre-owned, wide range
 - "cwsellors" — new, mid range UK (Seiko, Citizen, Tissot, Hamilton, Rotary)
-- "fhinds" — new, budget to mid range UK (Seiko, Citizen, Casio, Rotary, Lorus)
+- "fhinds" — new, budget to mid range UK ONLY (Seiko, Citizen, Casio, Rotary, Lorus)
 - "citizen" — new Citizen brand watches only
 
-Return ONLY a raw JSON object (not an array) with these fields:
-- "watch_name": string (full name e.g. "Rolex Submariner Date 126610LN")
+Return ONLY a raw JSON object with these fields:
+
+- "watch_name": string (full identified name e.g. "Rolex Submariner Date 126610LN")
 - "value_low": number (low estimate in GBP, no currency symbol)
 - "value_mid": number (mid estimate in GBP)
 - "value_high": number (high estimate in GBP)
-- "retail_price": string (approximate new retail price or "Discontinued" if no longer made)
+- "retail_price": string (approximate new retail price with £ symbol, or "Discontinued" if no longer made)
+- "retail_price_number": number or null (retail price as a number for calculation, null if discontinued or unknown)
+- "value_retention_pct": number or null (percentage of retail price the watch currently retains, e.g. 92 for 92%. null if retail unknown or discontinued and no meaningful comparison)
+
+- "price_2_years_ago": number or null (approximate market value of this model 2 years ago in GBP, null if unknown or too new)
+- "price_change_pct": number or null (percentage change over the last 2 years, e.g. 15 for +15%, -8 for -8%. null if unknown)
+- "price_history_note": string (2-3 sentences describing how this model's price has moved over the past 2-3 years and why. Be specific about the direction and any notable events that affected pricing.)
+
 - "verdict": "BUY" | "HOLD" | "SELL" (based on current market position relative to historical pricing)
-- "verdict_reason": string (2-3 sentences explaining the buy/sell/hold recommendation)
-- "condition_grade": "Mint" | "Excellent" | "Very Good" | "Good" | "Fair" (based on the described condition)
+- "verdict_reason": string (2-3 sentences explaining the buy/sell/hold recommendation in a warm, expert tone)
+
+- "suggested_listing_price": number or null (if you'd recommend selling, what should they list it at? Factor in the described condition. null if verdict is BUY or HOLD)
+- "listing_price_note": string or null (1 sentence explaining the listing price recommendation, e.g. "List slightly above mid-market to leave room for negotiation." null if not applicable)
+
+- "comparable_sales": array of 2-3 objects, each with:
+  - "description": string (e.g. "Excellent condition, full set, 2021")
+  - "price": number (sale price in GBP)
+  - "source": string (e.g. "Chrono24", "Auction", "Dealer")
+(These should be realistic recent comparable sales for this model. Make them varied in condition and source.)
+
+- "condition_grade": "Mint" | "Excellent" | "Very Good" | "Good" | "Fair"
 - "condition_notes": string (1-2 sentences on how condition affects this specific valuation)
-- "model_history": string (2-3 sentences about the model's history and desirability)
-- "market_trend": "rising" | "stable" | "falling" (current market direction for this model)
+- "model_history": string (2-3 sentences about the model's history, desirability, and collectability)
+- "market_trend": "rising" | "stable" | "falling"
 - "market_trend_note": string (1 sentence on recent price movement)
 - "platforms_buy": array of platform keys where someone could BUY this watch
 - "platforms_sell": array of platform keys where someone could SELL this watch
-- "confidence": "high" | "medium" | "low" (how confident you are in the valuation — low if the model is obscure or details are vague)
+- "confidence": "high" | "medium" | "low"
 - "confidence_note": string (1 sentence explaining confidence level)
-
-All GBP values should be realistic current market prices. Be honest — if the watch is common and affordable, say so. If it's highly sought after, explain why.
 
 No markdown, no code blocks. Start with { end with }.`;
 }
