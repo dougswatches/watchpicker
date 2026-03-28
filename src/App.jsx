@@ -7,11 +7,11 @@ const questions = [
     id: "budget", label: "What's your budget?",
     subtitle: "We'll find the best value in your range.", type: "single",
     options: [
-      { value: "under_500", label: "Under $500" },
-      { value: "500_2000", label: "$500 – $2,000" },
-      { value: "2000_5000", label: "$2,000 – $5,000" },
-      { value: "5000_15000", label: "$5,000 – $15,000" },
-      { value: "above_15000", label: "$15,000+" },
+      { value: "under_500", label: "Under £500" },
+      { value: "500_2000", label: "£500 – £2,000" },
+      { value: "2000_5000", label: "£2,000 – £5,000" },
+      { value: "5000_15000", label: "£5,000 – £15,000" },
+      { value: "above_15000", label: "£15,000+" },
     ],
   },
   {
@@ -72,9 +72,9 @@ const questions = [
 ];
  
 const budgetLabels = {
-  under_500: "under $500", "500_2000": "$500–$2,000",
-  "2000_5000": "$2,000–$5,000", "5000_15000": "$5,000–$15,000",
-  above_15000: "above $15,000",
+  under_500: "under £500", "500_2000": "£500–£2,000",
+  "2000_5000": "£2,000–£5,000", "5000_15000": "£5,000–£15,000",
+  above_15000: "above £15,000",
 };
  
 function buildPrompt(answers) {
@@ -84,38 +84,45 @@ function buildPrompt(answers) {
   const brands = (answers.brand_pref || []).join(", ") || "no preference";
   const type = answers.dress_vs_sport || "any";
   const existing = answers.existing_watches || "nothing specified";
-  return `You are a world-class watch expert. Recommend exactly 3 watches for this customer:
+  return `You are a world-class watch expert advising a UK-based buyer. Recommend exactly 3 watches for this customer:
 - Budget: ${budget}
 - Use case: ${useCase}
 - Style: ${style}
 - Brand preferences: ${brands}
 - Watch type: ${type}
 - Already owns: ${existing}
- 
+
+IMPORTANT RULES:
+- All prices MUST be in GBP (£). Never use USD.
+- Only include platforms where this SPECIFIC brand and model is genuinely sold. Do not guess.
+- Amazon and F.Hinds do NOT stock luxury brands (Rolex, Omega, Patek, AP, Breitling, IWC, JLC etc). Never include them for luxury watches.
+- Chrono24 and eBay stock almost everything pre-owned. WatchFinder only stocks mid-to-high luxury.
+- Goldsmiths, Beaverbrooks, and Chisholm Hunter are authorised dealers — only include them for brands they actually carry.
+
 Available platform keys and what they stock:
 - "chrono24" — pre-owned and grey market, all brands
 - "watchfinder" — pre-owned luxury (Rolex, Omega, TAG, Breitling, IWC etc)
 - "watchenclave" — pre-owned mid to high-end
 - "zeitauktion" — pre-owned European auction, mid to high-end
 - "ebay" — pre-owned all price points, vintage, grey market
-- "amazon" — new watches, mainstream brands (Seiko, Citizen, Casio, Orient, Tissot, Hamilton etc)
-- "goldsmiths" — new, authorised dealer (mid to luxury: TAG, Longines, Omega, Breitling, Tudor)
-- "beaverbrooks" — new, authorised dealer (mid range: Seiko, Citizen, TAG, Tissot, Frederique Constant)
+- "amazon" — new watches, mainstream brands ONLY (Seiko, Citizen, Casio, Orient, Tissot, Hamilton)
+- "goldsmiths" — new, authorised dealer (TAG, Longines, Omega, Breitling, Tudor, Gucci)
+- "beaverbrooks" — new, authorised dealer (Seiko, Citizen, TAG, Tissot, Frederique Constant)
 - "chisholmhunter" — new, authorised dealer (mid to luxury, Scotland-based)
 - "thbaker" — new, authorised dealer (mid range UK)
 - "houseofwatches" — new and pre-owned, wide range
 - "cwsellors" — new, mid range UK (Seiko, Citizen, Tissot, Hamilton, Rotary)
-- "fhinds" — new, budget to mid range UK (Seiko, Citizen, Casio, Rotary, Lorus)
+- "fhinds" — new, budget to mid range UK ONLY (Seiko, Citizen, Casio, Rotary, Lorus)
 - "citizen" — new Citizen brand watches only
- 
+
 Return ONLY a raw JSON array of 3 objects:
-- "name": string
-- "price": string
+- "name": string (full model name including reference if known)
+- "price": string (in GBP with £ symbol, e.g. "£4,500" or "£350–£500")
 - "availability": "new" | "preowned" | "both"
-- "reason": string (2-3 sentences)
-- "specs": array of 3 strings
-- "platforms": array of platform keys that genuinely stock this watch
- 
+- "reason": string (2-3 sentences, written in a friendly expert tone)
+- "specs": array of 3 strings (key specs like case size, movement, water resistance)
+- "platforms": array of platform keys that genuinely stock this watch — be selective, not exhaustive
+
 No markdown, no code blocks. Start with [ end with ].`;
 }
  
@@ -344,14 +351,13 @@ function WatchCard({ watch, index }) {
  
 // ─── Loader ───────────────────────────────────────────────────────────────────
  
-const Loader = () => (
+const Loader = ({ title, subtitle }) => (
   <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
     <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
     <div style={{textAlign:"center"}}>
-      <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Finding your watches</p>
-      <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Searching across all our partners…</p>
+      <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>{title || "Loading"}</p>
+      <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>{subtitle || "Please wait…"}</p>
     </div>
-    <style>{`@keyframes spin{to{transform:rotate(360deg)}} @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}`}</style>
   </div>
 );
  
@@ -382,10 +388,14 @@ function ValuationTool() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Server error');
       if (data.valuation) setResult(data.valuation);
       else throw new Error(data.error || 'No valuation returned');
     } catch (e) {
-      setError('Something went wrong. Please check your inputs and try again.');
+      const msg = e.message?.includes('timed out')
+        ? 'The request took too long. Please try again.'
+        : 'Something went wrong. Please check your inputs and try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -398,15 +408,7 @@ function ValuationTool() {
     return "£" + Number(n).toLocaleString("en-GB");
   };
 
-  if (loading) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
-      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
-      <div style={{textAlign:"center"}}>
-        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Valuing your watch</p>
-        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Analysing market data across all platforms…</p>
-      </div>
-    </div>
-  );
+  if (loading) return <Loader title="Valuing your watch" subtitle="Analysing market data across all platforms…"/>;
 
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
@@ -805,10 +807,14 @@ function ShouldIBuyTool() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Server error');
       if (data.analysis) setResult(data.analysis);
       else throw new Error(data.error || 'No analysis returned');
     } catch (e) {
-      setError('Something went wrong. Please check your inputs and try again.');
+      const msg = e.message?.includes('timed out')
+        ? 'The request took too long. Please try again.'
+        : 'Something went wrong. Please check your inputs and try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -819,15 +825,7 @@ function ShouldIBuyTool() {
     setResult(null); setError(null);
   };
 
-  if (loading) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
-      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
-      <div style={{textAlign:"center"}}>
-        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Analysing this listing</p>
-        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Checking price, red flags, and alternatives…</p>
-      </div>
-    </div>
-  );
+  if (loading) return <Loader title="Analysing this listing" subtitle="Checking price, red flags, and alternatives…"/>;
 
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
@@ -1264,10 +1262,14 @@ function AuthenticationTool() {
         body: JSON.stringify(formData),
       });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Server error');
       if (data.report) setResult(data.report);
       else throw new Error(data.error || 'No report returned');
     } catch (e) {
-      setError('Something went wrong. Please check your inputs and try again.');
+      const msg = e.message?.includes('timed out')
+        ? 'The request took too long. Please try again.'
+        : 'Something went wrong. Please check your inputs and try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -1278,15 +1280,7 @@ function AuthenticationTool() {
     setResult(null); setError(null);
   };
 
-  if (loading) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
-      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
-      <div style={{textAlign:"center"}}>
-        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Building your authentication guide</p>
-        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Analysing known counterfeit tells for this reference…</p>
-      </div>
-    </div>
-  );
+  if (loading) return <Loader title="Building your authentication guide" subtitle="Analysing known counterfeit tells for this reference…"/>;
 
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
@@ -1675,10 +1669,14 @@ function CollectionTool() {
         body: JSON.stringify({ watches }),
       });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Server error');
       if (data.analysis) setAnalysis(data.analysis);
       else throw new Error(data.error || 'No analysis returned');
     } catch (e) {
-      setError('Something went wrong. Please try again.');
+      const msg = e.message?.includes('timed out')
+        ? 'The request took too long. Please try again.'
+        : 'Something went wrong. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -1824,15 +1822,7 @@ function CollectionTool() {
   );
 
   // ─── Loading ───
-  if (loading) return (
-    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
-      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
-      <div style={{textAlign:"center"}}>
-        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Analysing your collection</p>
-        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Valuing {watches.length} watch{watches.length !== 1 ? "es" : ""} across all markets…</p>
-      </div>
-    </div>
-  );
+  if (loading) return <Loader title="Analysing your collection" subtitle={`Valuing ${watches.length} watch${watches.length !== 1 ? "es" : ""} across all markets…`}/>;
 
   // ─── Collection View (with optional analysis) ───
   return (
@@ -2068,10 +2058,14 @@ function WatchFinder() {
         body: JSON.stringify({ prompt: buildPrompt(answers) }),
       });
       const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Server error');
       if (data.watches) setResults(data.watches);
-      else throw new Error('No watches');
+      else throw new Error('No watches returned');
     } catch (e) {
-      setError('Something went wrong. Please try again.');
+      const msg = e.message?.includes('timed out') || response?.status === 504
+        ? 'The request took too long. Please try again — it usually works on the second attempt.'
+        : 'Something went wrong. Please try again.';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -2079,7 +2073,7 @@ function WatchFinder() {
  
   const reset = () => { setStep(0); setAnswers({}); setResults(null); setError(null); setLoading(false); };
  
-  if (loading) return <Loader/>;
+  if (loading) return <Loader title="Finding your watches" subtitle="Searching across all our partners…"/>;
  
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
@@ -2152,7 +2146,12 @@ function WatchFinder() {
                 className={`opt-btn${sel?" selected":""}`}
                 onClick={() => {
                   const cur = answers[q.id]||[];
-                  setAnswers(p => ({...p,[q.id]:cur.includes(opt.value)?cur.filter(v=>v!==opt.value):[...cur,opt.value]}));
+                  if (opt.value === "no_pref") {
+                    setAnswers(p => ({...p,[q.id]: cur.includes("no_pref") ? [] : ["no_pref"]}));
+                  } else {
+                    const without = cur.filter(v => v !== "no_pref");
+                    setAnswers(p => ({...p,[q.id]: without.includes(opt.value) ? without.filter(v=>v!==opt.value) : [...without, opt.value]}));
+                  }
                 }}>
                 <div style={{width:16,height:16,borderRadius:2,flexShrink:0,border:`2px solid ${sel?"#1a1a1a":"#ccc"}`,background:sel?"#1a1a1a":"#fff",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",transition:"all 0.12s"}}>
                   {sel && <CheckIcon/>}
