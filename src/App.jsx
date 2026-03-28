@@ -2101,6 +2101,8 @@ function WatchFinder() {
   const [error, setError] = useState(null);
   const [shared, setShared] = useState(false);
   const [autoSubmitted, setAutoSubmitted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [emailSaved, setEmailSaved] = useState(false);
 
   // Auto-submit from shared URL
   useEffect(() => {
@@ -2154,7 +2156,7 @@ function WatchFinder() {
 
   const submitQuiz = () => submitWithAnswers(answers);
 
-  const reset = () => { setStep(0); setAnswers({}); setResults(null); setCollectionNote(""); setError(null); setLoading(false); setShared(false); };
+  const reset = () => { setStep(0); setAnswers({}); setResults(null); setCollectionNote(""); setError(null); setLoading(false); setShared(false); setEmail(""); setEmailSaved(false); };
   const tweakAnswers = () => { setResults(null); setCollectionNote(""); setError(null); setStep(0); setShared(false); };
 
   const shareResults = () => {
@@ -2256,6 +2258,55 @@ function WatchFinder() {
           transition:"background 0.2s",
         }}>{shared ? "LINK COPIED ✓" : "SHARE PICKS"}</button>
       </div>
+
+      {/* Email Capture */}
+      {!emailSaved ? (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,
+          padding:"1.25rem",marginBottom:"1.5rem",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.5rem"}}>SAVE YOUR PICKS</p>
+          <p style={{fontSize:"0.85rem",color:"#555",margin:"0 0 0.85rem",lineHeight:1.5}}>
+            Enter your email and we'll send you these recommendations so you don't lose them.
+          </p>
+          <div style={{display:"flex",gap:"0.5rem"}}>
+            <input type="email" placeholder="your@email.com" value={email}
+              onChange={e => setEmail(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && email.includes("@")) { setEmailSaved(true); } }}
+              style={{
+                flex:1,padding:"0.65rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+                background:"#fff",color:"#1a1a1a",fontSize:"0.85rem",
+                fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none",minWidth:0,
+              }}
+              onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+              onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+            />
+            <button onClick={() => { if (email.includes("@")) setEmailSaved(true); }}
+              disabled={!email.includes("@")}
+              style={{
+                padding:"0.65rem 1.25rem",borderRadius:3,fontSize:"0.78rem",fontWeight:700,
+                letterSpacing:"0.05em",
+                background:email.includes("@")?"#1a1a1a":"#ccc",color:"#fff",
+                border:"none",cursor:"pointer",whiteSpace:"nowrap",
+                fontFamily:"'Albert Sans',system-ui,sans-serif",
+              }}>SEND</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
+          padding:"1rem 1.25rem",marginBottom:"1.5rem",
+          display:"flex",alignItems:"center",gap:"0.65rem",
+        }}>
+          <div style={{
+            width:20,height:20,borderRadius:"50%",background:"#2d6a4f",flexShrink:0,
+            display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",
+          }}><CheckIcon/></div>
+          <p style={{fontSize:"0.82rem",color:"#555",margin:0}}>
+            Nice one — we'll email your picks to <strong>{email}</strong> once email delivery is wired up. For now your results are saved in this session.
+          </p>
+        </div>
+      )}
     </div>
   );
  
