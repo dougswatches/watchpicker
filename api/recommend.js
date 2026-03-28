@@ -58,7 +58,7 @@ function buildLink(platform, name) {
     case 'fhinds':
       return { label: 'F.Hinds', url: `https://www.fhinds.co.uk/search?q=${q}` };
     case 'citizen':
-      return { label: 'Citizen', url: `https://www.citizenwatch.com/us/en/search/?q=${q}` };
+      return { label: 'Citizen', url: `https://www.citizenwatch.com/uk/en/search/?q=${q}` };
     default:
       return null;
   }
@@ -75,15 +75,20 @@ export default async function handler(req, res) {
   if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not set' });
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 45000);
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.7, maxOutputTokens: 8192 },
       }),
     });
+    clearTimeout(timeout);
 
     const data = await response.json();
     if (!response.ok) return res.status(response.status).json({ error: 'Gemini API error', details: data });
@@ -109,6 +114,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ watches: enriched });
 
   } catch (error) {
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Request timed out. Please try again.' });
+    }
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }
