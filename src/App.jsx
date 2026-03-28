@@ -125,7 +125,7 @@ const NAV_ITEMS = [
   { id: "finder",         label: "Watch Finder",        icon: "◎", badge: "FREE",    live: true  },
   { id: "valuation",      label: "Valuation Tool",      icon: "◈", badge: "FREE",    live: true  },
   { id: "shouldibuy",     label: "Should I Buy This?",  icon: "◇", badge: "FREE",    live: true  },
-  { id: "authentication", label: "Authentication",       icon: "◉", badge: "COMING",  live: false },
+  { id: "authentication", label: "Authentication",       icon: "◉", badge: "FREE",    live: true  },
   { id: "collection",     label: "My Collection",        icon: "▣", badge: "PRO",     live: false },
 ];
  
@@ -356,7 +356,7 @@ const Loader = () => (
 );
  
 // ─── Valuation Tool ──────────────────────────────────────────────────────────
- 
+
 const CONDITION_OPTIONS = [
   { value: "mint", label: "Mint — unworn, full set, as new" },
   { value: "excellent", label: "Excellent — minimal wear, complete" },
@@ -364,15 +364,15 @@ const CONDITION_OPTIONS = [
   { value: "good", label: "Good — visible wear, fully functional" },
   { value: "fair", label: "Fair — heavy wear, may need service" },
 ];
- 
+
 function ValuationTool() {
   const [formData, setFormData] = useState({ brand: "", model: "", reference: "", condition: "", notes: "" });
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
- 
+
   const canSubmit = formData.brand.trim() && formData.model.trim() && formData.condition;
- 
+
   const handleSubmit = async () => {
     setLoading(true); setError(null);
     try {
@@ -390,14 +390,14 @@ function ValuationTool() {
       setLoading(false);
     }
   };
- 
+
   const reset = () => { setFormData({ brand: "", model: "", reference: "", condition: "", notes: "" }); setResult(null); setError(null); };
- 
+
   const formatGBP = (n) => {
     if (!n && n !== 0) return "—";
     return "£" + Number(n).toLocaleString("en-GB");
   };
- 
+
   if (loading) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
       <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
@@ -407,7 +407,7 @@ function ValuationTool() {
       </div>
     </div>
   );
- 
+
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
       <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
@@ -419,9 +419,9 @@ function ValuationTool() {
       }}>TRY AGAIN</button>
     </div>
   );
- 
+
   if (result) return <ValuationResult result={result} onReset={reset} formatGBP={formatGBP}/>;
- 
+
   // ─── Input Form ───
   return (
     <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
@@ -436,7 +436,7 @@ function ValuationTool() {
           Tell us about your watch and we'll give you an instant market valuation.
         </p>
       </div>
- 
+
       <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
         {/* Brand */}
         <div>
@@ -455,7 +455,7 @@ function ValuationTool() {
             onBlur={e=>e.target.style.borderColor="#e0e0e0"}
           />
         </div>
- 
+
         {/* Model */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -473,7 +473,7 @@ function ValuationTool() {
             onBlur={e=>e.target.style.borderColor="#e0e0e0"}
           />
         </div>
- 
+
         {/* Reference */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -491,7 +491,7 @@ function ValuationTool() {
             onBlur={e=>e.target.style.borderColor="#e0e0e0"}
           />
         </div>
- 
+
         {/* Condition */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -519,7 +519,7 @@ function ValuationTool() {
             })}
           </div>
         </div>
- 
+
         {/* Notes */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -538,7 +538,7 @@ function ValuationTool() {
           />
         </div>
       </div>
- 
+
       <button onClick={handleSubmit} disabled={!canSubmit} style={{
         display:"inline-flex",alignItems:"center",gap:"0.5rem",
         padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
@@ -551,31 +551,31 @@ function ValuationTool() {
     </div>
   );
 }
- 
+
 // ─── Valuation Result ────────────────────────────────────────────────────────
- 
+
 function ValuationResult({ result, onReset, formatGBP }) {
   const [showAllBuy, setShowAllBuy] = useState(false);
   const [showAllSell, setShowAllSell] = useState(false);
- 
+
   const buyLinks = result.buy_links || [];
   const sellLinks = result.sell_links || [];
   const visibleBuy = showAllBuy ? buyLinks : buyLinks.slice(0, 3);
   const visibleSell = showAllSell ? sellLinks : sellLinks.slice(0, 3);
- 
+
   const verdictColors = {
     BUY:  { bg: "#2d6a4f", text: "#fff" },
     HOLD: { bg: "#e9c46a", text: "#1a1a1a" },
     SELL: { bg: "#c0392b", text: "#fff" },
   };
   const vc = verdictColors[result.verdict] || verdictColors.HOLD;
- 
+
   const trendIcon = result.market_trend === "rising" ? "↗" : result.market_trend === "falling" ? "↘" : "→";
   const trendColor = result.market_trend === "rising" ? "#2d6a4f" : result.market_trend === "falling" ? "#c0392b" : "#888";
- 
+
   const confidenceColors = { high: "#2d6a4f", medium: "#e9c46a", low: "#c0392b" };
   const confColor = confidenceColors[result.confidence] || "#888";
- 
+
   return (
     <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
       {/* Header */}
@@ -583,7 +583,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
         <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>VALUATION REPORT</p>
         <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>{result.watch_name}</h2>
       </div>
- 
+
       {/* Value Card */}
       <div style={{
         background:"#1a1a1a",borderRadius:4,padding:"1.5rem",marginBottom:"1rem",
@@ -633,7 +633,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           )}
         </div>
       </div>
- 
+
       {/* Verdict */}
       <div style={{
         background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
@@ -646,7 +646,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           {result.verdict_reason}
         </p>
       </div>
- 
+
       {/* Condition + Confidence row */}
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1rem"}}>
         {/* Condition */}
@@ -671,7 +671,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           <p style={{fontSize:"0.78rem",lineHeight:1.6,color:"#666",margin:0}}>{result.confidence_note}</p>
         </div>
       </div>
- 
+
       {/* Model History */}
       <div style={{
         background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
@@ -680,7 +680,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
         <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.6rem"}}>ABOUT THIS MODEL</p>
         <p style={{fontSize:"0.875rem",lineHeight:1.7,color:"#444",margin:0}}>{result.model_history}</p>
       </div>
- 
+
       {/* Where to Buy */}
       {buyLinks.length > 0 && (
         <div style={{
@@ -715,7 +715,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           </div>
         </div>
       )}
- 
+
       {/* Where to Sell */}
       {sellLinks.length > 0 && (
         <div style={{
@@ -750,7 +750,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           </div>
         </div>
       )}
- 
+
       {/* Disclaimer + Reset */}
       <div style={{
         background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
@@ -760,7 +760,7 @@ function ValuationResult({ result, onReset, formatGBP }) {
           This valuation is an AI-generated estimate based on current market data. It is not a professional appraisal and should not be used for insurance purposes. Actual sale prices may vary depending on exact condition, provenance, and market timing.
         </p>
       </div>
- 
+
       <button onClick={onReset} style={{
         display:"inline-flex",alignItems:"center",gap:"0.5rem",
         padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
@@ -773,9 +773,9 @@ function ValuationResult({ result, onReset, formatGBP }) {
     </div>
   );
 }
- 
+
 // ─── Should I Buy This? Tool ─────────────────────────────────────────────────
- 
+
 const PLATFORM_SOURCE_OPTIONS = [
   { value: "ebay", label: "eBay" },
   { value: "chrono24", label: "Chrono24" },
@@ -785,7 +785,7 @@ const PLATFORM_SOURCE_OPTIONS = [
   { value: "private", label: "Private seller" },
   { value: "other", label: "Other / not sure" },
 ];
- 
+
 function ShouldIBuyTool() {
   const [formData, setFormData] = useState({
     watch_description: "", asking_price: "", seller_description: "", platform_source: "",
@@ -793,9 +793,9 @@ function ShouldIBuyTool() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
- 
+
   const canSubmit = formData.watch_description.trim().length > 10;
- 
+
   const handleSubmit = async () => {
     setLoading(true); setError(null);
     try {
@@ -813,12 +813,12 @@ function ShouldIBuyTool() {
       setLoading(false);
     }
   };
- 
+
   const reset = () => {
     setFormData({ watch_description: "", asking_price: "", seller_description: "", platform_source: "" });
     setResult(null); setError(null);
   };
- 
+
   if (loading) return (
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
       <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
@@ -828,7 +828,7 @@ function ShouldIBuyTool() {
       </div>
     </div>
   );
- 
+
   if (error) return (
     <div style={{textAlign:"center",padding:"3rem 1rem"}}>
       <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
@@ -840,9 +840,9 @@ function ShouldIBuyTool() {
       }}>TRY AGAIN</button>
     </div>
   );
- 
+
   if (result) return <ShouldIBuyResult result={result} onReset={reset}/>;
- 
+
   // ─── Input Form ───
   return (
     <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
@@ -857,7 +857,7 @@ function ShouldIBuyTool() {
           Describe the listing and we'll check for red flags, price fairness, and better alternatives.
         </p>
       </div>
- 
+
       <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
         {/* Watch description */}
         <div>
@@ -877,7 +877,7 @@ function ShouldIBuyTool() {
             onBlur={e=>e.target.style.borderColor="#e0e0e0"}
           />
         </div>
- 
+
         {/* Asking price */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -895,7 +895,7 @@ function ShouldIBuyTool() {
             onBlur={e=>e.target.style.borderColor="#e0e0e0"}
           />
         </div>
- 
+
         {/* Where they found it */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -923,7 +923,7 @@ function ShouldIBuyTool() {
             })}
           </div>
         </div>
- 
+
         {/* Seller details */}
         <div>
           <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
@@ -943,7 +943,7 @@ function ShouldIBuyTool() {
           />
         </div>
       </div>
- 
+
       <button onClick={handleSubmit} disabled={!canSubmit} style={{
         display:"inline-flex",alignItems:"center",gap:"0.5rem",
         padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
@@ -956,19 +956,19 @@ function ShouldIBuyTool() {
     </div>
   );
 }
- 
+
 // ─── Should I Buy Result ─────────────────────────────────────────────────────
- 
+
 function ShouldIBuyResult({ result, onReset }) {
   const [showAllAlts, setShowAllAlts] = useState(false);
- 
+
   const verdictConfig = {
     "BUY": { bg: "#2d6a4f", text: "#fff", label: "BUY", icon: "✓" },
     "PROCEED WITH CAUTION": { bg: "#e9c46a", text: "#1a1a1a", label: "CAUTION", icon: "!" },
     "AVOID": { bg: "#c0392b", text: "#fff", label: "AVOID", icon: "✕" },
   };
   const vc = verdictConfig[result.verdict] || verdictConfig["PROCEED WITH CAUTION"];
- 
+
   const priceLabels = {
     great_deal: "Great deal", fair: "Fair price", slightly_high: "Slightly high",
     overpriced: "Overpriced", cannot_assess: "Can't assess",
@@ -977,21 +977,21 @@ function ShouldIBuyResult({ result, onReset }) {
     great_deal: "#2d6a4f", fair: "#2d6a4f", slightly_high: "#e9c46a",
     overpriced: "#c0392b", cannot_assess: "#888",
   };
- 
+
   const formatGBP = (n) => {
     if (!n && n !== 0) return null;
     return "£" + Number(n).toLocaleString("en-GB");
   };
- 
+
   const redFlags = result.red_flags || [];
   const greenFlags = result.green_flags || [];
   const questions = result.questions_to_ask || [];
   const alternatives = result.alternatives || [];
   const searchLinks = result.search_links || [];
- 
+
   const severityColors = { high: "#c0392b", medium: "#e9c46a", low: "#888" };
   const confColors = { high: "#2d6a4f", medium: "#e9c46a", low: "#c0392b" };
- 
+
   return (
     <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
       {/* Header */}
@@ -999,7 +999,7 @@ function ShouldIBuyResult({ result, onReset }) {
         <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>LISTING ANALYSIS</p>
         <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>{result.identified_watch}</h2>
       </div>
- 
+
       {/* Verdict Card */}
       <div style={{
         background:"#1a1a1a",borderRadius:4,padding:"1.5rem",marginBottom:"1rem",
@@ -1027,7 +1027,7 @@ function ShouldIBuyResult({ result, onReset }) {
           {result.verdict_detail}
         </p>
       </div>
- 
+
       {/* Price Assessment */}
       <div style={{
         background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
@@ -1060,7 +1060,7 @@ function ShouldIBuyResult({ result, onReset }) {
         )}
         <p style={{fontSize:"0.85rem",lineHeight:1.7,color:"#444",margin:0}}>{result.price_commentary}</p>
       </div>
- 
+
       {/* Red Flags */}
       {redFlags.length > 0 && (
         <div style={{
@@ -1093,7 +1093,7 @@ function ShouldIBuyResult({ result, onReset }) {
           </div>
         </div>
       )}
- 
+
       {/* Green Flags */}
       {greenFlags.length > 0 && (
         <div style={{
@@ -1118,7 +1118,7 @@ function ShouldIBuyResult({ result, onReset }) {
           </div>
         </div>
       )}
- 
+
       {/* Questions to Ask */}
       {questions.length > 0 && (
         <div style={{
@@ -1140,7 +1140,7 @@ function ShouldIBuyResult({ result, onReset }) {
           </div>
         </div>
       )}
- 
+
       {/* Alternatives */}
       {alternatives.length > 0 && (
         <div style={{
@@ -1182,7 +1182,7 @@ function ShouldIBuyResult({ result, onReset }) {
           </div>
         </div>
       )}
- 
+
       {/* Compare Prices */}
       {searchLinks.length > 0 && (
         <div style={{
@@ -1211,7 +1211,7 @@ function ShouldIBuyResult({ result, onReset }) {
           </div>
         </div>
       )}
- 
+
       {/* Confidence + Disclaimer */}
       <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"1rem"}}>
         <div style={{width:8,height:8,borderRadius:"50%",background:confColors[result.confidence] || "#888"}}/>
@@ -1220,7 +1220,7 @@ function ShouldIBuyResult({ result, onReset }) {
           <span style={{fontSize:"0.75rem",color:"#888"}}>— {result.confidence_note}</span>
         )}
       </div>
- 
+
       <div style={{
         background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
         padding:"1rem 1.25rem",marginBottom:"1.5rem",
@@ -1229,7 +1229,7 @@ function ShouldIBuyResult({ result, onReset }) {
           This analysis is AI-generated based on the information you provided. It is not a guarantee of authenticity or value. Always inspect a watch in person or through a trusted third party before completing a purchase.
         </p>
       </div>
- 
+
       <button onClick={onReset} style={{
         display:"inline-flex",alignItems:"center",gap:"0.5rem",
         padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
@@ -1242,7 +1242,397 @@ function ShouldIBuyResult({ result, onReset }) {
     </div>
   );
 }
- 
+
+// ─── Authentication Tool ─────────────────────────────────────────────────────
+
+function AuthenticationTool() {
+  const [formData, setFormData] = useState({
+    brand: "", model: "", reference: "", details: "", seller_claims: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const canSubmit = formData.brand.trim() && formData.model.trim();
+
+  const handleSubmit = async () => {
+    setLoading(true); setError(null);
+    try {
+      const response = await fetch('/api/authenticate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (data.report) setResult(data.report);
+      else throw new Error(data.error || 'No report returned');
+    } catch (e) {
+      setError('Something went wrong. Please check your inputs and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reset = () => {
+    setFormData({ brand: "", model: "", reference: "", details: "", seller_claims: "" });
+    setResult(null); setError(null);
+  };
+
+  if (loading) return (
+    <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:"1.5rem",padding:"4rem 2rem"}}>
+      <div style={{width:36,height:36,borderRadius:"50%",border:"2px solid #e8e8e8",borderTopColor:"#1a1a1a",animation:"spin 0.8s linear infinite"}}/>
+      <div style={{textAlign:"center"}}>
+        <p style={{fontSize:"0.95rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.25rem"}}>Building your authentication guide</p>
+        <p style={{fontSize:"0.82rem",color:"#888",margin:0}}>Analysing known counterfeit tells for this reference…</p>
+      </div>
+    </div>
+  );
+
+  if (error) return (
+    <div style={{textAlign:"center",padding:"3rem 1rem"}}>
+      <p style={{color:"#c0392b",marginBottom:"1rem",fontSize:"0.9rem"}}>{error}</p>
+      <button onClick={handleSubmit} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",background:"#1a1a1a",color:"#fff",border:"none",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}>TRY AGAIN</button>
+    </div>
+  );
+
+  if (result) return <AuthenticationResult result={result} onReset={reset}/>;
+
+  // ─── Input Form ───
+  return (
+    <div style={{maxWidth:560,margin:"0 auto",padding:"1.5rem"}}>
+      <div style={{marginBottom:"2rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.5rem"}}>
+          AUTHENTICATION ASSISTANT
+        </p>
+        <h2 style={{fontSize:"1.4rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2,marginBottom:"0.3rem"}}>
+          Spot a fake before it costs you
+        </h2>
+        <p style={{fontSize:"0.85rem",color:"#888"}}>
+          Tell us the watch and we'll give you a reference-specific checklist of exactly what to look for.
+        </p>
+      </div>
+
+      <div style={{display:"flex",flexDirection:"column",gap:"1rem",marginBottom:"2rem"}}>
+        {/* Brand */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            BRAND *
+          </label>
+          <input type="text" placeholder="e.g. Rolex, Omega, Breitling…"
+            value={formData.brand}
+            onChange={e => setFormData(p => ({...p, brand: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none",
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+
+        {/* Model */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            MODEL *
+          </label>
+          <input type="text" placeholder="e.g. Submariner Date, Speedmaster Professional…"
+            value={formData.model}
+            onChange={e => setFormData(p => ({...p, model: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none",
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+
+        {/* Reference */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            REFERENCE NUMBER <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(strongly recommended — gives you much more specific checks)</span>
+          </label>
+          <input type="text" placeholder="e.g. 126610LN, 310.30.42.50.01.002…"
+            value={formData.reference}
+            onChange={e => setFormData(p => ({...p, reference: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",outline:"none",
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+
+        {/* What they can see */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            WHAT CAN YOU SEE? <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional — describe anything you've noticed)</span>
+          </label>
+          <textarea rows={3}
+            placeholder={"Describe anything you can see about the watch — dial details, case finish, movement, engravings, bracelet, anything that looks off or that you want checked.\n\ne.g. The date magnification looks a bit weak, the coronet looks slightly thick, the rehaut engraving seems a bit rough…"}
+            value={formData.details}
+            onChange={e => setFormData(p => ({...p, details: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.85rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",resize:"vertical",outline:"none",lineHeight:1.6,
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+
+        {/* Seller claims */}
+        <div>
+          <label style={{display:"block",fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.4rem"}}>
+            SELLER CLAIMS <span style={{fontWeight:400,letterSpacing:0,textTransform:"none",fontSize:"0.72rem"}}>(optional — what has the seller told you?)</span>
+          </label>
+          <textarea rows={2}
+            placeholder="e.g. Says it was serviced by Rolex in 2022, claims all original parts, says dial was swapped under warranty…"
+            value={formData.seller_claims}
+            onChange={e => setFormData(p => ({...p, seller_claims: e.target.value}))}
+            style={{
+              width:"100%",padding:"0.75rem 1rem",border:"1px solid #e0e0e0",borderRadius:3,
+              background:"#fff",color:"#1a1a1a",fontSize:"0.9rem",
+              fontFamily:"'Albert Sans',system-ui,sans-serif",resize:"vertical",outline:"none",lineHeight:1.6,
+            }}
+            onFocus={e=>e.target.style.borderColor="#1a1a1a"}
+            onBlur={e=>e.target.style.borderColor="#e0e0e0"}
+          />
+        </div>
+      </div>
+
+      <button onClick={handleSubmit} disabled={!canSubmit} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.7rem 1.5rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",
+        background:canSubmit?"#1a1a1a":"#ccc",color:"#fff",border:"none",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",width:"100%",justifyContent:"center",
+      }}>
+        CHECK AUTHENTICITY <ArrowRight/>
+      </button>
+    </div>
+  );
+}
+
+// ─── Authentication Result ───────────────────────────────────────────────────
+
+function ChecklistSection({ title, checks, defaultOpen }) {
+  const [open, setOpen] = useState(!!defaultOpen);
+  if (!checks || checks.length === 0) return null;
+  return (
+    <div style={{
+      background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,overflow:"hidden",
+      marginBottom:"1rem",
+    }}>
+      <button onClick={() => setOpen(o => !o)} style={{
+        width:"100%",padding:"1rem 1.25rem",display:"flex",alignItems:"center",
+        justifyContent:"space-between",background:"none",border:"none",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",margin:0}}>
+          {title} ({checks.length})
+        </p>
+        <span style={{fontSize:"0.85rem",color:"#aaa",transform:open?"rotate(180deg)":"none",transition:"transform 0.2s"}}>▾</span>
+      </button>
+      {open && (
+        <div style={{padding:"0 1.25rem 1.25rem",display:"flex",flexDirection:"column",gap:"1rem"}}>
+          {checks.map((item, i) => (
+            <div key={i} style={{borderTop: i === 0 ? "1px solid #f0f0f0" : "none", paddingTop: i === 0 ? "0.75rem" : 0}}>
+              <p style={{fontSize:"0.85rem",fontWeight:700,color:"#1a1a1a",margin:"0 0 0.4rem"}}>{item.check}</p>
+              <div style={{display:"flex",flexDirection:"column",gap:"0.3rem"}}>
+                <div style={{display:"flex",gap:"0.5rem",alignItems:"flex-start"}}>
+                  <span style={{fontSize:"0.7rem",fontWeight:700,color:"#2d6a4f",minWidth:55,paddingTop:1}}>GENUINE</span>
+                  <p style={{fontSize:"0.8rem",lineHeight:1.6,color:"#444",margin:0}}>{item.genuine_detail}</p>
+                </div>
+                <div style={{display:"flex",gap:"0.5rem",alignItems:"flex-start"}}>
+                  <span style={{fontSize:"0.7rem",fontWeight:700,color:"#c0392b",minWidth:55,paddingTop:1}}>FAKE</span>
+                  <p style={{fontSize:"0.8rem",lineHeight:1.6,color:"#444",margin:0}}>{item.fake_tell}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AuthenticationResult({ result, onReset }) {
+  const verdictConfig = {
+    "LIKELY GENUINE": { bg: "#2d6a4f", text: "#fff", icon: "✓" },
+    "INCONCLUSIVE": { bg: "#e9c46a", text: "#1a1a1a", icon: "?" },
+    "SUSPICIOUS": { bg: "#c0392b", text: "#fff", icon: "!" },
+    "CANNOT ASSESS": { bg: "#888", text: "#fff", icon: "—" },
+  };
+  const vc = verdictConfig[result.verdict] || verdictConfig["CANNOT ASSESS"];
+
+  const riskColors = { high: "#c0392b", medium: "#e9c46a", low: "#2d6a4f" };
+  const confColors = { high: "#2d6a4f", medium: "#e9c46a", low: "#c0392b" };
+  const severityColors = { high: "#c0392b", medium: "#e9c46a", low: "#888" };
+
+  const concerns = result.concerns_from_description || [];
+  const nextSteps = result.next_steps || [];
+
+  return (
+    <div style={{maxWidth:600,margin:"0 auto",padding:"1.5rem"}}>
+      {/* Header */}
+      <div style={{marginBottom:"1.5rem",paddingBottom:"1.25rem",borderBottom:"2px solid #1a1a1a"}}>
+        <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.12em",color:"#888",marginBottom:"0.4rem"}}>AUTHENTICATION REPORT</p>
+        <h2 style={{fontSize:"1.5rem",fontWeight:700,color:"#1a1a1a",lineHeight:1.2}}>{result.identified_watch}</h2>
+        {result.production_years && (
+          <p style={{fontSize:"0.82rem",color:"#888",margin:"0.25rem 0 0"}}>Production: {result.production_years}</p>
+        )}
+      </div>
+
+      {/* Verdict Card */}
+      <div style={{
+        background:"#1a1a1a",borderRadius:4,padding:"1.5rem",marginBottom:"1rem",
+        animation:"fadeUp 0.4s ease both",
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:"0.75rem",marginBottom:"1rem"}}>
+          <div style={{
+            width:40,height:40,borderRadius:"50%",background:vc.bg,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            fontSize:"1.1rem",fontWeight:700,color:vc.text,flexShrink:0,
+          }}>{vc.icon}</div>
+          <div style={{flex:1}}>
+            <span style={{
+              fontSize:"0.7rem",fontWeight:700,letterSpacing:"0.12em",
+              padding:"0.2rem 0.6rem",borderRadius:2,background:vc.bg,color:vc.text,
+            }}>{result.verdict}</span>
+          </div>
+        </div>
+        <p style={{fontSize:"0.85rem",lineHeight:1.7,color:"#aaa",margin:0}}>
+          {result.verdict_reason}
+        </p>
+      </div>
+
+      {/* Counterfeit Risk + Confidence */}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"1rem",marginBottom:"1rem"}}>
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          animation:"fadeUp 0.4s ease both",animationDelay:"0.05s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.5rem"}}>COUNTERFEIT RISK</p>
+          <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"0.35rem"}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:riskColors[result.counterfeit_risk] || "#888"}}/>
+            <p style={{fontSize:"1rem",fontWeight:700,color:"#1a1a1a",margin:0,textTransform:"capitalize"}}>{result.counterfeit_risk}</p>
+          </div>
+          <p style={{fontSize:"0.78rem",lineHeight:1.6,color:"#666",margin:0}}>{result.counterfeit_risk_note}</p>
+        </div>
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          animation:"fadeUp 0.4s ease both",animationDelay:"0.1s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.5rem"}}>CONFIDENCE</p>
+          <div style={{display:"flex",alignItems:"center",gap:"0.5rem",marginBottom:"0.35rem"}}>
+            <div style={{width:8,height:8,borderRadius:"50%",background:confColors[result.confidence] || "#888"}}/>
+            <p style={{fontSize:"1rem",fontWeight:700,color:"#1a1a1a",margin:0,textTransform:"capitalize"}}>{result.confidence}</p>
+          </div>
+          <p style={{fontSize:"0.78rem",lineHeight:1.6,color:"#666",margin:0}}>{result.confidence_note}</p>
+        </div>
+      </div>
+
+      {/* Concerns from description */}
+      {concerns.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.15s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#c0392b",marginBottom:"0.75rem"}}>
+            CONCERNS FROM YOUR DESCRIPTION ({concerns.length})
+          </p>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.65rem"}}>
+            {concerns.map((c, i) => (
+              <div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
+                <div style={{
+                  width:8,height:8,borderRadius:"50%",flexShrink:0,marginTop:6,
+                  background:severityColors[c.severity] || "#888",
+                }}/>
+                <div>
+                  <p style={{fontSize:"0.85rem",fontWeight:600,color:"#1a1a1a",margin:"0 0 0.15rem"}}>
+                    {c.concern}
+                    <span style={{
+                      fontSize:"0.62rem",fontWeight:700,letterSpacing:"0.08em",
+                      marginLeft:"0.5rem",color:severityColors[c.severity] || "#888",
+                      textTransform:"uppercase",
+                    }}>{c.severity}</span>
+                  </p>
+                  <p style={{fontSize:"0.8rem",lineHeight:1.6,color:"#666",margin:0}}>{c.explanation}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Checklist Sections */}
+      <div style={{animation:"fadeUp 0.4s ease both",animationDelay:"0.2s"}}>
+        <p style={{fontSize:"0.72rem",fontWeight:700,letterSpacing:"0.12em",color:"#1a1a1a",margin:"1.5rem 0 0.75rem"}}>
+          WHAT TO CHECK
+        </p>
+        <ChecklistSection title="DIAL" checks={result.dial_checks} defaultOpen={true}/>
+        <ChecklistSection title="CASE & CROWN" checks={result.case_checks}/>
+        <ChecklistSection title="MOVEMENT" checks={result.movement_checks}/>
+        <ChecklistSection title="BRACELET & CLASP" checks={result.bracelet_checks}/>
+        <ChecklistSection title="BOX & PAPERS" checks={result.document_checks}/>
+      </div>
+
+      {/* Next Steps */}
+      {nextSteps.length > 0 && (
+        <div style={{
+          background:"#fff",border:"1px solid #e8e8e8",borderRadius:4,padding:"1.25rem",
+          marginBottom:"1rem",animation:"fadeUp 0.4s ease both",animationDelay:"0.25s",
+        }}>
+          <p style={{fontSize:"0.68rem",fontWeight:700,letterSpacing:"0.1em",color:"#888",marginBottom:"0.75rem"}}>
+            RECOMMENDED NEXT STEPS
+          </p>
+          <div style={{display:"flex",flexDirection:"column",gap:"0.5rem"}}>
+            {nextSteps.map((step, i) => (
+              <div key={i} style={{display:"flex",gap:"0.65rem",alignItems:"flex-start"}}>
+                <span style={{
+                  fontSize:"0.7rem",fontWeight:700,color:"#aaa",minWidth:18,paddingTop:2,
+                }}>{String(i + 1).padStart(2, '0')}</span>
+                <p style={{fontSize:"0.85rem",lineHeight:1.6,color:"#333",margin:0}}>{step}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Disclaimer */}
+      <div style={{
+        background:"#f9f9f9",border:"1px solid #e8e8e8",borderRadius:4,
+        padding:"1rem 1.25rem",marginBottom:"1.5rem",
+      }}>
+        <p style={{fontSize:"0.75rem",lineHeight:1.6,color:"#888",margin:0}}>
+          This is an AI-generated authentication guide based on known counterfeit characteristics. It is not a professional authentication service and should not be treated as a guarantee of authenticity. For high-value purchases, always have the watch inspected by an authorised service centre or a trusted independent watchmaker.
+        </p>
+      </div>
+
+      <button onClick={onReset} style={{
+        display:"inline-flex",alignItems:"center",gap:"0.5rem",
+        padding:"0.6rem 1.25rem",borderRadius:3,fontSize:"0.8rem",fontWeight:700,
+        letterSpacing:"0.05em",background:"#f0f0f0",color:"#555",
+        border:"1px solid #ddd",cursor:"pointer",
+        fontFamily:"'Albert Sans',system-ui,sans-serif",
+      }}>
+        <ArrowLeft/> CHECK ANOTHER WATCH
+      </button>
+    </div>
+  );
+}
+
 // ─── Watch Finder Tool ────────────────────────────────────────────────────────
  
 function WatchFinder() {
@@ -1557,7 +1947,8 @@ export default function App() {
           {activePage === "finder" && <WatchFinder/>}
           {activePage === "valuation" && <ValuationTool/>}
           {activePage === "shouldibuy" && <ShouldIBuyTool/>}
-          {activePage !== "finder" && activePage !== "valuation" && activePage !== "shouldibuy" && <ComingSoon toolId={activePage}/>}
+          {activePage === "authentication" && <AuthenticationTool/>}
+          {activePage === "collection" && <ComingSoon toolId={activePage}/>}
         </main>
       </div>
     </div>
